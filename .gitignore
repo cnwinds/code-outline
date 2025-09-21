@@ -1,0 +1,83 @@
+# 二进制文件
+/build/
+contextgen
+contextgen.exe
+
+# Go 构建输出
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# 测试二进制文件，built with `go test -c`
+*.test
+
+# 输出的delve调试器二进制文件
+__debug_bin*
+
+# 依赖模块
+/vendor/
+
+# Go workspace文件
+go.work
+
+# IDE文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS生成的文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 日志文件
+*.log
+
+# 临时文件
+*.tmp
+*.temp
+
+# 项目上下文输出文件
+project_context.json
+example_context.json
+
+# Tree-sitter 语法文件
+grammars/
+*.so
+*.dll
+*.dylib
+
+# 环境变量文件
+.env
+.env.local
+
+# 备份文件
+*.bak
+*.backup
+
+# 编译器和工具生成的文件
+*.out
+*.prof
+
+# 覆盖率文件
+coverage.out
+coverage.html
+
+# Air live-reload工具
+tmp/
+
+# 压缩文件
+*.zip
+*.tar.gz
+*.tgz
+
+# 文档生成文件
+/docs/build/

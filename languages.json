@@ -1,0 +1,141 @@
+{
+  "go": {
+    "extensions": [".go"],
+    "grammar_path": "./grammars/tree-sitter-go.so",
+    "queries": {
+      "top_level_symbols": [
+        "(function_declaration) @symbol",
+        "(method_declaration) @symbol",
+        "(type_declaration) @symbol",
+        "(const_declaration) @symbol",
+        "(var_declaration) @symbol"
+      ],
+      "container_body": "(block) @body | (struct_type) @body | (interface_type) @body",
+      "container_methods": "(method_declaration) @method"
+    }
+  },
+  "javascript": {
+    "extensions": [".js", ".jsx"],
+    "grammar_path": "./grammars/tree-sitter-javascript.so",
+    "queries": {
+      "top_level_symbols": [
+        "(function_declaration) @symbol",
+        "(arrow_function) @symbol",
+        "(class_declaration) @symbol",
+        "(const_declaration) @symbol",
+        "(let_declaration) @symbol",
+        "(var_declaration) @symbol"
+      ],
+      "container_body": "(class_body) @body | (object) @body",
+      "container_methods": "(method_definition) @method"
+    }
+  },
+  "typescript": {
+    "extensions": [".ts", ".tsx"],
+    "grammar_path": "./grammars/tree-sitter-typescript.so",
+    "queries": {
+      "top_level_symbols": [
+        "(function_declaration) @symbol",
+        "(arrow_function) @symbol",
+        "(class_declaration) @symbol",
+        "(interface_declaration) @symbol",
+        "(type_alias_declaration) @symbol",
+        "(const_declaration) @symbol",
+        "(let_declaration) @symbol",
+        "(var_declaration) @symbol"
+      ],
+      "container_body": "(class_body) @body | (interface_body) @body | (object_type) @body",
+      "container_methods": "(method_definition) @method | (method_signature) @method"
+    }
+  },
+  "python": {
+    "extensions": [".py"],
+    "grammar_path": "./grammars/tree-sitter-python.so",
+    "queries": {
+      "top_level_symbols": [
+        "(function_definition) @symbol",
+        "(class_definition) @symbol",
+        "(assignment) @symbol"
+      ],
+      "container_body": "(block) @body",
+      "container_methods": "(function_definition) @method"
+    }
+  },
+  "java": {
+    "extensions": [".java"],
+    "grammar_path": "./grammars/tree-sitter-java.so",
+    "queries": {
+      "top_level_symbols": [
+        "(method_declaration) @symbol",
+        "(class_declaration) @symbol",
+        "(interface_declaration) @symbol",
+        "(field_declaration) @symbol",
+        "(constructor_declaration) @symbol"
+      ],
+      "container_body": "(class_body) @body | (interface_body) @body",
+      "container_methods": "(method_declaration) @method | (constructor_declaration) @method"
+    }
+  },
+  "csharp": {
+    "extensions": [".cs"],
+    "grammar_path": "./grammars/tree-sitter-c-sharp.so",
+    "queries": {
+      "top_level_symbols": [
+        "(method_declaration) @symbol",
+        "(class_declaration) @symbol",
+        "(interface_declaration) @symbol",
+        "(struct_declaration) @symbol",
+        "(field_declaration) @symbol",
+        "(property_declaration) @symbol"
+      ],
+      "container_body": "(declaration_list) @body",
+      "container_methods": "(method_declaration) @method"
+    }
+  },
+  "rust": {
+    "extensions": [".rs"],
+    "grammar_path": "./grammars/tree-sitter-rust.so",
+    "queries": {
+      "top_level_symbols": [
+        "(function_item) @symbol",
+        "(struct_item) @symbol",
+        "(enum_item) @symbol",
+        "(trait_item) @symbol",
+        "(impl_item) @symbol",
+        "(const_item) @symbol",
+        "(static_item) @symbol"
+      ],
+      "container_body": "(declaration_list) @body | (field_declaration_list) @body",
+      "container_methods": "(function_item) @method"
+    }
+  },
+  "cpp": {
+    "extensions": [".cpp", ".cc", ".cxx", ".c++", ".hpp", ".h++"],
+    "grammar_path": "./grammars/tree-sitter-cpp.so", 
+    "queries": {
+      "top_level_symbols": [
+        "(function_definition) @symbol",
+        "(declaration) @symbol",
+        "(class_specifier) @symbol",
+        "(struct_specifier) @symbol",
+        "(namespace_definition) @symbol"
+      ],
+      "container_body": "(field_declaration_list) @body | (declaration_list) @body",
+      "container_methods": "(function_definition) @method | (declaration) @method"
+    }
+  },
+  "c": {
+    "extensions": [".c", ".h"],
+    "grammar_path": "./grammars/tree-sitter-c.so",
+    "queries": {
+      "top_level_symbols": [
+        "(function_definition) @symbol",
+        "(declaration) @symbol",
+        "(struct_specifier) @symbol",
+        "(enum_specifier) @symbol"
+      ],
+      "container_body": "(field_declaration_list) @body | (enumerator_list) @body",
+      "container_methods": ""
+    }
+  }
+}
