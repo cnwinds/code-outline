@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/yourusername/CodeCartographer/internal/models"
+	"github.com/cnwinds/CodeCartographer/internal/models"
 )
 
 // FileParser 文件解析器接口
@@ -35,7 +35,7 @@ func (s *Scanner) ScanProject(projectPath string) (map[string]models.FileInfo, [
 	var techStack []string
 	var mu sync.Mutex
 	var wg sync.WaitGroup
-	
+
 	// 用于收集错误的channel
 	errorChan := make(chan error, 100)
 	var scanErrors []error
@@ -93,7 +93,7 @@ func (s *Scanner) ScanProject(projectPath string) (map[string]models.FileInfo, [
 			// 安全地更新结果
 			mu.Lock()
 			files[relativePath] = *fileInfo
-			
+
 			// 收集技术栈信息
 			lang := s.getLanguageFromExtension(ext)
 			if lang != "" && !contains(techStack, lang) {
@@ -154,7 +154,7 @@ func (s *Scanner) shouldExclude(path string) bool {
 		if strings.Contains(path, pattern) {
 			return true
 		}
-		
+
 		// 通配符匹配
 		if matched, _ := filepath.Match(pattern, filepath.Base(path)); matched {
 			return true
@@ -167,61 +167,61 @@ func (s *Scanner) shouldExclude(path string) bool {
 // getLanguageFromExtension 根据文件扩展名获取语言名称
 func (s *Scanner) getLanguageFromExtension(ext string) string {
 	languageMap := map[string]string{
-		".go":   "Go",
-		".js":   "JavaScript",
-		".jsx":  "JavaScript",
-		".ts":   "TypeScript",
-		".tsx":  "TypeScript",
-		".py":   "Python",
-		".java": "Java",
-		".c":    "C",
-		".cpp":  "C++",
-		".cc":   "C++",
-		".cxx":  "C++",
-		".h":    "C/C++",
-		".hpp":  "C++",
-		".cs":   "C#",
-		".php":  "PHP",
-		".rb":   "Ruby",
-		".rs":   "Rust",
-		".swift": "Swift",
-		".kt":   "Kotlin",
-		".scala": "Scala",
-		".clj":  "Clojure",
-		".hs":   "Haskell",
-		".ml":   "OCaml",
-		".fs":   "F#",
-		".lua":  "Lua",
-		".r":    "R",
-		".m":    "Objective-C",
-		".mm":   "Objective-C++",
-		".dart": "Dart",
-		".elm":  "Elm",
-		".ex":   "Elixir",
-		".exs":  "Elixir",
-		".erl":  "Erlang",
-		".hrl":  "Erlang",
-		".sql":  "SQL",
-		".sh":   "Shell",
-		".bash": "Bash",
-		".zsh":  "Zsh",
-		".fish": "Fish",
-		".ps1":  "PowerShell",
-		".html": "HTML",
-		".css":  "CSS",
-		".scss": "SCSS",
-		".sass": "Sass",
-		".less": "Less",
-		".xml":  "XML",
-		".json": "JSON",
-		".yaml": "YAML",
-		".yml":  "YAML",
-		".toml": "TOML",
-		".ini":  "INI",
-		".cfg":  "Config",
-		".conf": "Config",
-		".md":   "Markdown",
-		".tex":  "LaTeX",
+		".go":         "Go",
+		".js":         "JavaScript",
+		".jsx":        "JavaScript",
+		".ts":         "TypeScript",
+		".tsx":        "TypeScript",
+		".py":         "Python",
+		".java":       "Java",
+		".c":          "C",
+		".cpp":        "C++",
+		".cc":         "C++",
+		".cxx":        "C++",
+		".h":          "C/C++",
+		".hpp":        "C++",
+		".cs":         "C#",
+		".php":        "PHP",
+		".rb":         "Ruby",
+		".rs":         "Rust",
+		".swift":      "Swift",
+		".kt":         "Kotlin",
+		".scala":      "Scala",
+		".clj":        "Clojure",
+		".hs":         "Haskell",
+		".ml":         "OCaml",
+		".fs":         "F#",
+		".lua":        "Lua",
+		".r":          "R",
+		".m":          "Objective-C",
+		".mm":         "Objective-C++",
+		".dart":       "Dart",
+		".elm":        "Elm",
+		".ex":         "Elixir",
+		".exs":        "Elixir",
+		".erl":        "Erlang",
+		".hrl":        "Erlang",
+		".sql":        "SQL",
+		".sh":         "Shell",
+		".bash":       "Bash",
+		".zsh":        "Zsh",
+		".fish":       "Fish",
+		".ps1":        "PowerShell",
+		".html":       "HTML",
+		".css":        "CSS",
+		".scss":       "SCSS",
+		".sass":       "Sass",
+		".less":       "Less",
+		".xml":        "XML",
+		".json":       "JSON",
+		".yaml":       "YAML",
+		".yml":        "YAML",
+		".toml":       "TOML",
+		".ini":        "INI",
+		".cfg":        "Config",
+		".conf":       "Config",
+		".md":         "Markdown",
+		".tex":        "LaTeX",
 		".dockerfile": "Docker",
 		".Dockerfile": "Docker",
 	}

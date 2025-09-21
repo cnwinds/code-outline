@@ -6,9 +6,10 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
-	"github.com/yourusername/CodeCartographer/internal/config"
-	"github.com/yourusername/CodeCartographer/internal/models"
+	"github.com/cnwinds/CodeCartographer/internal/config"
+	"github.com/cnwinds/CodeCartographer/internal/models"
 )
 
 // SimpleParser 简单的基于正则表达式的解析器
@@ -28,11 +29,17 @@ func NewSimpleParser(languagesConfig models.LanguagesConfig) *SimpleParser {
 func (p *SimpleParser) ParseFile(filePath string) (*models.FileInfo, error) {
 	// 获取文件扩展名
 	ext := filepath.Ext(filePath)
-	
+
 	// 查找对应的语言配置
 	langName, _, found := config.GetLanguageByExtension(p.languagesConfig, ext)
 	if !found {
 		return nil, fmt.Errorf("不支持的文件类型: %s", ext)
+	}
+
+	// 获取文件信息
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("获取文件信息失败: %v", err)
 	}
 
 	// 读取文件内容
@@ -48,8 +55,10 @@ func (p *SimpleParser) ParseFile(filePath string) (*models.FileInfo, error) {
 	}
 
 	return &models.FileInfo{
-		Purpose: p.extractFilePurpose(string(content), langName),
-		Symbols: symbols,
+		Purpose:      p.extractFilePurpose(string(content), langName),
+		Symbols:      symbols,
+		LastModified: fileInfo.ModTime().Format(time.RFC3339),
+		FileSize:     fileInfo.Size(),
 	}, nil
 }
 
@@ -78,7 +87,7 @@ func (p *SimpleParser) parseSymbolsByLanguage(content, language string) ([]model
 // parseGoSymbols 解析Go语言符号
 func (p *SimpleParser) parseGoSymbols(lines []string) []models.Symbol {
 	var symbols []models.Symbol
-	
+
 	// 正则表达式模式
 	patterns := map[string]*regexp.Regexp{
 		"function": regexp.MustCompile(`^func\s+(\w+)?(\([^)]*\))?\s*(\([^)]*\))?\s*(\w.*)?{?`),
@@ -97,7 +106,7 @@ func (p *SimpleParser) parseGoSymbols(lines []string) []models.Symbol {
 		for symbolType, pattern := range patterns {
 			if matches := pattern.FindStringSubmatch(trimmed); len(matches) > 1 {
 				purpose := p.extractPurpose(lines, i)
-				
+
 				symbol := models.Symbol{
 					Prototype: trimmed,
 					Purpose:   purpose,
@@ -123,7 +132,7 @@ func (p *SimpleParser) parseGoSymbols(lines []string) []models.Symbol {
 // parseJSSymbols 解析JavaScript/TypeScript符号
 func (p *SimpleParser) parseJSSymbols(lines []string) []models.Symbol {
 	var symbols []models.Symbol
-	
+
 	patterns := map[string]*regexp.Regexp{
 		"function":  regexp.MustCompile(`^(export\s+)?(async\s+)?function\s+(\w+)`),
 		"arrow":     regexp.MustCompile(`^(const|let|var)\s+(\w+)\s*=\s*(async\s+)?\([^)]*\)\s*=>`),
@@ -140,7 +149,7 @@ func (p *SimpleParser) parseJSSymbols(lines []string) []models.Symbol {
 		for _, pattern := range patterns {
 			if matches := pattern.FindStringSubmatch(trimmed); len(matches) > 1 {
 				purpose := p.extractPurpose(lines, i)
-				
+
 				symbol := models.Symbol{
 					Prototype: trimmed,
 					Purpose:   purpose,
@@ -159,7 +168,7 @@ func (p *SimpleParser) parseJSSymbols(lines []string) []models.Symbol {
 // parsePythonSymbols 解析Python符号
 func (p *SimpleParser) parsePythonSymbols(lines []string) []models.Symbol {
 	var symbols []models.Symbol
-	
+
 	patterns := map[string]*regexp.Regexp{
 		"function": regexp.MustCompile(`^def\s+(\w+)\s*\(`),
 		"class":    regexp.MustCompile(`^class\s+(\w+).*:`),
@@ -174,7 +183,7 @@ func (p *SimpleParser) parsePythonSymbols(lines []string) []models.Symbol {
 		for _, pattern := range patterns {
 			if matches := pattern.FindStringSubmatch(trimmed); len(matches) > 1 {
 				purpose := p.extractPurpose(lines, i)
-				
+
 				symbol := models.Symbol{
 					Prototype: trimmed,
 					Purpose:   purpose,
@@ -193,10 +202,10 @@ func (p *SimpleParser) parsePythonSymbols(lines []string) []models.Symbol {
 // parseJavaSymbols 解析Java符号
 func (p *SimpleParser) parseJavaSymbols(lines []string) []models.Symbol {
 	var symbols []models.Symbol
-	
+
 	patterns := map[string]*regexp.Regexp{
-		"method": regexp.MustCompile(`^\s*(public|private|protected).*\s+(\w+)\s*\(`),
-		"class":  regexp.MustCompile(`^\s*(public\s+)?(abstract\s+)?class\s+(\w+)`),
+		"method":    regexp.MustCompile(`^\s*(public|private|protected).*\s+(\w+)\s*\(`),
+		"class":     regexp.MustCompile(`^\s*(public\s+)?(abstract\s+)?class\s+(\w+)`),
 		"interface": regexp.MustCompile(`^\s*(public\s+)?interface\s+(\w+)`),
 	}
 
@@ -209,7 +218,7 @@ func (p *SimpleParser) parseJavaSymbols(lines []string) []models.Symbol {
 		for _, pattern := range patterns {
 			if matches := pattern.FindStringSubmatch(trimmed); len(matches) > 1 {
 				purpose := p.extractPurpose(lines, i)
-				
+
 				symbol := models.Symbol{
 					Prototype: trimmed,
 					Purpose:   purpose,
@@ -228,10 +237,10 @@ func (p *SimpleParser) parseJavaSymbols(lines []string) []models.Symbol {
 // parseGenericSymbols 通用符号解析
 func (p *SimpleParser) parseGenericSymbols(lines []string) []models.Symbol {
 	var symbols []models.Symbol
-	
+
 	// 简单的通用模式：查找看起来像函数或类定义的行
 	patterns := []*regexp.Regexp{
-		regexp.MustCompile(`^\w+.*\([^)]*\).*{?`),  // 函数模式
+		regexp.MustCompile(`^\w+.*\([^)]*\).*{?`),             // 函数模式
 		regexp.MustCompile(`^(class|struct|interface)\s+\w+`), // 类型定义模式
 	}
 
@@ -265,21 +274,21 @@ func (p *SimpleParser) extractPurpose(lines []string, currentLine int) string {
 		if line == "" {
 			continue
 		}
-		
+
 		// Go注释
 		if strings.HasPrefix(line, "//") {
 			return strings.TrimSpace(strings.TrimPrefix(line, "//"))
 		}
-		
+
 		// Python注释
 		if strings.HasPrefix(line, "#") {
 			return strings.TrimSpace(strings.TrimPrefix(line, "#"))
 		}
-		
+
 		// 其他语言的注释暂时不处理
 		break
 	}
-	
+
 	return ""
 }
 
@@ -288,10 +297,10 @@ func (p *SimpleParser) extractGoTypeBody(lines []string, startLine int) (string,
 	var bodyLines []string
 	braceCount := 0
 	started := false
-	
+
 	for i := startLine; i < len(lines); i++ {
 		line := lines[i]
-		
+
 		// 计算大括号
 		for _, char := range line {
 			if char == '{' {
@@ -301,7 +310,7 @@ func (p *SimpleParser) extractGoTypeBody(lines []string, startLine int) (string,
 				braceCount--
 			}
 		}
-		
+
 		// 如果已经开始并且找到了内容
 		if started && braceCount > 0 {
 			// 提取大括号内的内容
@@ -314,31 +323,31 @@ func (p *SimpleParser) extractGoTypeBody(lines []string, startLine int) (string,
 				bodyLines = append(bodyLines, line)
 			}
 		}
-		
+
 		// 如果大括号闭合，结束
 		if started && braceCount == 0 {
 			return strings.Join(bodyLines, "\n"), i + 1
 		}
 	}
-	
+
 	return strings.Join(bodyLines, "\n"), len(lines)
 }
 
 // extractFilePurpose 提取文件的用途说明
 func (p *SimpleParser) extractFilePurpose(content, language string) string {
 	lines := strings.Split(content, "\n")
-	
+
 	// 查找文件顶部的注释
 	for _, line := range lines[:min(10, len(lines))] {
 		trimmed := strings.TrimSpace(line)
-		
+
 		// 跳过package声明等
-		if strings.HasPrefix(trimmed, "package") || 
-		   strings.HasPrefix(trimmed, "import") ||
-		   trimmed == "" {
+		if strings.HasPrefix(trimmed, "package") ||
+			strings.HasPrefix(trimmed, "import") ||
+			trimmed == "" {
 			continue
 		}
-		
+
 		// 查找注释
 		if strings.HasPrefix(trimmed, "//") {
 			purpose := strings.TrimSpace(strings.TrimPrefix(trimmed, "//"))
@@ -346,13 +355,13 @@ func (p *SimpleParser) extractFilePurpose(content, language string) string {
 				return purpose
 			}
 		}
-		
+
 		// 如果遇到代码行，停止查找
 		if !strings.HasPrefix(trimmed, "//") && !strings.HasPrefix(trimmed, "#") {
 			break
 		}
 	}
-	
+
 	return "TODO: Describe the purpose of this file."
 }
 

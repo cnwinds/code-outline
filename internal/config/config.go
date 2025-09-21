@@ -7,14 +7,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/yourusername/CodeCartographer/internal/models"
+	"github.com/cnwinds/CodeCartographer/internal/models"
 )
 
 // Config 表示应用程序配置
 type Config struct {
-	Languages models.LanguagesConfig
-	Output    string
-	Exclude   []string
+	Languages   models.LanguagesConfig
+	Output      string
+	Exclude     []string
 	ProjectPath string
 }
 
@@ -49,12 +49,11 @@ func LoadLanguagesConfig(configPath string) (models.LanguagesConfig, error) {
 func createDefaultLanguagesConfig(configPath string) (models.LanguagesConfig, error) {
 	defaultConfig := models.LanguagesConfig{
 		"go": {
-			Extensions:  []string{".go"},
-			GrammarPath: "./grammars/tree-sitter-go.so",
+			Extensions: []string{".go"},
 			Queries: models.Queries{
 				TopLevelSymbols: []string{
 					"(function_declaration) @symbol",
-					"(method_declaration) @symbol", 
+					"(method_declaration) @symbol",
 					"(type_declaration) @symbol",
 					"(const_declaration) @symbol",
 					"(var_declaration) @symbol",
@@ -64,8 +63,7 @@ func createDefaultLanguagesConfig(configPath string) (models.LanguagesConfig, er
 			},
 		},
 		"javascript": {
-			Extensions:  []string{".js", ".jsx"},
-			GrammarPath: "./grammars/tree-sitter-javascript.so",
+			Extensions: []string{".js", ".jsx"},
 			Queries: models.Queries{
 				TopLevelSymbols: []string{
 					"(function_declaration) @symbol",
@@ -80,8 +78,7 @@ func createDefaultLanguagesConfig(configPath string) (models.LanguagesConfig, er
 			},
 		},
 		"python": {
-			Extensions:  []string{".py"},
-			GrammarPath: "./grammars/tree-sitter-python.so",
+			Extensions: []string{".py"},
 			Queries: models.Queries{
 				TopLevelSymbols: []string{
 					"(function_definition) @symbol",

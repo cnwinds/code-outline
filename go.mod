@@ -1,4 +1,4 @@
-module github.com/yourusername/CodeCartographer
+module github.com/cnwinds/CodeCartographer
 
 go 1.21
 
