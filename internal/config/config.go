@@ -114,7 +114,7 @@ func createDefaultLanguagesConfig(configPath string) (models.LanguagesConfig, er
 }
 
 // GetLanguageByExtension 根据文件扩展名获取语言配置
-func (config models.LanguagesConfig) GetLanguageByExtension(ext string) (string, models.LanguageConfig, bool) {
+func GetLanguageByExtension(config models.LanguagesConfig, ext string) (string, models.LanguageConfig, bool) {
 	for langName, langConfig := range config {
 		for _, supportedExt := range langConfig.Extensions {
 			if supportedExt == ext {

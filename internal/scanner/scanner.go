@@ -8,19 +8,23 @@ import (
 	"sync"
 
 	"github.com/yourusername/CodeCartographer/internal/models"
-	"github.com/yourusername/CodeCartographer/internal/parser"
 )
+
+// FileParser 文件解析器接口
+type FileParser interface {
+	ParseFile(filePath string) (*models.FileInfo, error)
+}
 
 // Scanner 文件扫描器
 type Scanner struct {
-	parser      *parser.Parser
+	parser          FileParser
 	excludePatterns []string
 }
 
 // NewScanner 创建新的扫描器实例
-func NewScanner(parser *parser.Parser, excludePatterns []string) *Scanner {
+func NewScanner(parser FileParser, excludePatterns []string) *Scanner {
 	return &Scanner{
-		parser:      parser,
+		parser:          parser,
 		excludePatterns: excludePatterns,
 	}
 }

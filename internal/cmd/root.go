@@ -71,7 +71,7 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 
 	// 2. 创建解析器
 	fmt.Println("🔧 初始化解析器...")
-	codeParser := parser.NewParser(languagesConfig)
+	codeParser := parser.NewSimpleParser(languagesConfig)
 
 	// 3. 解析排除模式
 	var excludePatterns []string

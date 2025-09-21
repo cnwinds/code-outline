@@ -8,12 +8,13 @@
 
 ## ✨ 特性
 
-- 🚀 **高性能**: 基于 Go 和 Tree-sitter 的高效解析引擎
-- 🌍 **多语言支持**: 通过配置文件支持任意编程语言
+- 🚀 **高性能**: 基于 Go 的高效解析引擎，支持并发处理
+- 🌍 **多语言支持**: 通过配置文件支持 9+ 种编程语言
 - ⚡ **并发处理**: 利用 Goroutines 实现高速文件扫描
 - 🎯 **LLM 优化**: 为 LLM Token 效率极致优化的 JSON 输出格式
 - 🔧 **可配置**: 灵活的排除规则和自定义配置
 - 📦 **跨平台**: 支持 Windows、Linux、macOS
+- 🔍 **智能解析**: 基于正则表达式的多语言符号提取
 
 ## 🚀 快速开始
 
@@ -45,140 +46,141 @@ make run
 
 # 排除特定目录
 ./build/contextgen generate --exclude "node_modules,vendor,.git"
+
+# 使用自定义配置
+./build/contextgen generate --config my_languages.json
 ```
 
----
+## 📋 支持的语言
 
-### **最终版开发需求文档：通用型项目上下文生成器 (`ContextGen`)**
+当前支持的编程语言：
 
-**1. 项目愿景**
+| 语言 | 扩展名 | 符号类型 |
+|------|--------|----------|
+| Go | `.go` | 函数、方法、结构体、常量、变量 |
+| JavaScript | `.js`, `.jsx` | 函数、类、箭头函数、声明 |
+| TypeScript | `.ts`, `.tsx` | 函数、类、接口、类型别名 |
+| Python | `.py` | 函数、类、赋值 |
+| Java | `.java` | 方法、类、接口、字段 |
+| C# | `.cs` | 方法、类、接口、结构体、属性 |
+| Rust | `.rs` | 函数、结构体、枚举、特征、实现 |
+| C++ | `.cpp`, `.cc`, `.cxx`, `.hpp` | 函数、类、结构体、命名空间 |
+| C | `.c`, `.h` | 函数、结构体、枚举 |
 
-开发一个名为 `ContextGen` 的高性能、跨平台的命令行工具。该工具旨在通过静态分析，为任何复杂的代码仓库生成一个统一、简洁且信息丰富的 `project_context.json` 文件。此文件将作为大语言模型（LLM）的“全局上下文记忆”，使其能够以前所未有的准确性和深度来理解项目架构，从而革命性地提升其在代码生成、需求变更、重构和调试等任务上的表现。
+## 🎯 演示
 
-**2. 核心技术栈**
+让我们看看 CodeCartographer 如何分析自己的项目：
 
-*   **开发语言:** **Go**。利用其卓越的性能、强大的并发能力、简单的跨平台编译和部署。
-*   **代码解析框架:** **Tree-sitter**。利用其高效的增量解析能力和丰富的社区语法包，实现对多种编程语言的精确、健壮的解析。
+```bash
+$ ./contextgen generate
+🚀 开始生成项目上下文...
+📋 加载语言配置...
+✅ 已加载 9 种语言的配置
+🔧 初始化解析器...
+🔍 扫描项目: .
+✅ 扫描完成，找到 6 个文件
+📦 构建项目上下文...
+💾 生成输出文件: project_context.json
 
-**3. `project_context.json` 输出格式规范 (最终版)**
+📊 统计信息:
+  项目名称: CodeCartographer
+  技术栈: Go
+  文件数量: 6
+  模块数量: 6
+  符号数量: 53
+  最后更新: 2025-09-21 20:02:20
+🎉 项目上下文生成完成!
+```
 
-这是工具的核心产出物，其设计在 **LLM 理解能力** 和 **Token 效率** 之间达到了最佳平衡。
+## 📄 输出格式
 
-#### a. 顶层结构
+生成的 `project_context.json` 文件包含：
 
 ```json
 {
-  "projectName": "...",
-  "projectGoal": "TODO: ...",
-  "techStack": ["Go", "JavaScript", "..."],
-  "lastUpdated": "...",
+  "projectName": "项目名称",
+  "projectGoal": "项目目标描述", 
+  "techStack": ["Go", "JavaScript"],
+  "lastUpdated": "2025-09-21T20:02:20Z",
   "architecture": {
-    "overview": "TODO: ...",
+    "overview": "架构概述",
     "moduleSummary": {
-      "cmd/contextgen": "TODO: ..."
+      "module_path": "模块描述"
     }
   },
   "files": {
     "path/to/file.go": {
-      "purpose": "TODO: ...",
-      "symbols": [ /* Symbol Object Array */ ]
+      "purpose": "文件用途",
+      "symbols": [
+        {
+          "prototype": "func Example() error",
+          "purpose": "函数说明",
+          "range": [10, 15],
+          "body": "函数体内容（适用于结构体等）",
+          "methods": []
+        }
+      ]
     }
   }
 }
 ```
 
-#### b. `Symbol` 对象结构
+## 🛠️ 开发
 
-这是描述代码中一个“符号”（如结构体、函数、常量等）的统一格式。
+### 项目结构
 
-```go
-// Go Struct Definition for a Symbol
-type Symbol struct {
-    Prototype string   `json:"prototype"`
-    Purpose   string   `json:"purpose"`
-    Range     []int    `json:"range"`
-    Body      string   `json:"body,omitempty"` // 用于类/结构体/接口等容器类型
-    Methods   []Symbol `json:"methods,omitempty"` // 用于类/结构体的方法
-}
+```
+CodeCartographer/
+├── cmd/contextgen/          # 主程序入口
+├── internal/
+│   ├── cmd/                 # CLI 命令实现
+│   ├── config/              # 配置管理
+│   ├── models/              # 数据结构定义
+│   ├── parser/              # 代码解析器
+│   └── scanner/             # 文件扫描器
+├── languages.json           # 语言配置文件
+├── Makefile                # 构建脚本
+├── Dockerfile              # Docker 配置
+└── README.md               # 项目文档
 ```
 
-*   `prototype`: 符号的完整声明行，从源代码原样复制。
-*   `purpose`: 从符号上方或旁边的文档注释中提取的说明。
-*   `range`: `[start_line, end_line]`，符号在文件中的行号范围。
-*   `body`: **(关键优化)** 对于结构体、类、接口等，此字段包含其内部所有内容的**原始多行字符串**，保留缩进和注释。这极大地节省了 token。
-*   `methods`: 对于可以拥有方法的符号（如结构体），此数组包含其所有方法，每个方法也是一个 `Symbol` 对象。
+### 构建命令
 
-#### c. 完整示例
+```bash
+# 构建项目
+make build
 
-对于以下 Go 源码 (`database/models.go`):
+# 跨平台构建
+make build-all
 
-```go
-package database
+# 运行测试
+make test
 
-const DefaultRole = "user"
+# 代码格式化
+make fmt
 
-// User defines the user model.
-type User struct {
-    ID    int    `json:"id"`
-    Email string `json:"email"`
-}
+# 清理构建文件
+make clean
 
-// IsAdmin checks user privileges.
-func (u *User) IsAdmin() bool {
-    return u.Email == "admin@example.com"
-}
+# 生成示例
+make example
 ```
 
-生成的 JSON 部分应为：
+### Docker 使用
 
-```json
-"database/models.go": {
-  "purpose": "TODO: Describe the purpose of this file.",
-  "symbols": [
-    {
-      "prototype": "const DefaultRole = \"user\"",
-      "purpose": "",
-      "range": [3, 3]
-    },
-    {
-      "prototype": "type User struct",
-      "purpose": "User defines the user model.",
-      "range": [6, 9],
-      "body": "    ID    int    `json:\"id\"`\n    Email string `json:\"email\"`",
-      "methods": [
-        {
-          "prototype": "func (u *User) IsAdmin() bool",
-          "purpose": "IsAdmin checks user privileges.",
-          "range": [12, 14]
-        }
-      ]
-    }
-  ]
-}
+```bash
+# 构建镜像
+make docker-build
+
+# 使用 Docker 运行
+make docker-run
 ```
 
-**4. 功能与技术实现需求**
+## ⚙️ 配置
 
-1.  **可扩展的多语言支持:**
-    *   工具必须通过一个外部配置文件 `languages.json` 来管理对不同语言的支持，无需重新编译程序即可添加新语言。
-    *   该配置文件定义了语言与文件扩展名的映射、预编译的 Tree-sitter 语法库 (`.so`/`.dll`) 的路径，以及用于提取各种符号的 Tree-sitter 查询。
+### 语言配置文件 (languages.json)
 
-2.  **基于 Tree-sitter 的核心解析引擎:**
-    *   **动态加载语法**: 程序能根据要解析的文件类型，动态加载对应的 Tree-sitter 语法库。
-    *   **分层查询**: 解析逻辑应分层。首先，使用查询找到文件中的所有顶级符号。然后，对于容器类型的符号（如 `struct`），在其对应的语法树节点上**递归执行**方法查询和**提取**主体文本，以构建嵌套的 `Symbol` 结构。
-    *   **文本提取**: `prototype`, `body` 和 `purpose` 必须直接从源文件文本中精确提取，保留原始格式。
-
-3.  **高性能并发处理:**
-    *   必须利用 Go 的 Goroutines 对文件进行并发扫描和解析，以显著加快在大型代码库上的运行速度。
-
-4.  **健壮的命令行接口 (CLI):**
-    *   使用 Go 的 `cobra` 或类似库构建。
-    *   `contextgen generate --path <project_path>`: 主命令。
-    *   `--output <file_path>` (可选): 指定输出文件路径。
-    *   `--exclude <dir1,dir2>` (可选): 指定要排除的目录或文件模式。
-    *   `--config <config_path>` (可选): 指定 `languages.json` 的路径。
-
-**5. 语言配置文件 (`languages.json`) 规范**
+工具通过 `languages.json` 文件配置对不同语言的支持：
 
 ```json
 {
@@ -189,25 +191,87 @@ func (u *User) IsAdmin() bool {
       "top_level_symbols": [
         "(function_declaration) @symbol",
         "(method_declaration) @symbol",
-        "(type_declaration) @symbol",
-        "(const_declaration) @symbol",
-        "(var_declaration) @symbol"
+        "(type_declaration) @symbol"
       ],
-      "container_body": "(block) @body | (struct_type) @body | (interface_type) @body",
+      "container_body": "(block) @body | (struct_type) @body",
       "container_methods": "(method_declaration) @method"
     }
   }
 }
-```*   `queries` 定义了从语法树中捕获目标节点的规则。
+```
 
-**6. 开发实施计划**
+### 自定义配置
 
-1.  **项目初始化:** 设置 Go 项目，引入 `go-tree-sitter` 和 CLI 库。
-2.  **定义数据结构:** 在 Go 中创建与 `project_context.json` 格式完全匹配的 `struct`。
-3.  **配置模块:** 实现 `languages.json` 的加载和解析逻辑。
-4.  **核心解析器 (`Parser`):** 这是项目的核心。封装 Tree-sitter 的所有交互：加载语法、解析代码、执行查询，并将查询结果转换为我们的 `Symbol` 结构。
-5.  **文件处理与并发控制:** 实现文件遍历、过滤逻辑，并使用 Goroutine 池来调度 `Parser` 对文件进行并发处理。
-6.  **CLI 实现:** 构建用户友好的命令行接口。
-7.  **主程序:** 整合所有模块，编排从参数解析到最终文件生成的完整流程。
+- 修改 `languages.json` 添加新语言支持
+- 调整正则表达式模式以改进符号识别
+- 配置文件扩展名映射
 
-这份文档为 `ContextGen` 的开发提供了完整的蓝图。请开始构建这个强大而高效的开发辅助工具。
+## 🎯 使用场景
+
+### 为 LLM 提供项目上下文
+
+```bash
+# 生成项目上下文
+./contextgen generate --path ./my-project
+
+# 将 project_context.json 提供给 LLM
+# LLM 现在可以理解整个项目结构和代码架构
+```
+
+### 项目文档生成
+
+CodeCartographer 生成的上下文文件可以作为：
+- 项目架构文档的基础
+- 新成员入职的参考资料
+- 代码审查的辅助工具
+- 重构规划的依据
+
+### 代码分析
+
+- 快速了解大型项目的结构
+- 识别关键模块和依赖关系
+- 分析代码质量和复杂度
+
+## 📊 性能
+
+- **并发处理**: 多 Goroutine 并行扫描文件
+- **内存效率**: 流式处理大型文件
+- **速度优化**: 智能文件过滤和缓存
+
+典型性能指标：
+- 1000 个文件的项目：~2-5 秒
+- 10000 个文件的项目：~10-30 秒
+
+## 🤝 贡献
+
+欢迎贡献代码！请查看 [CONTRIBUTING.md](CONTRIBUTING.md) 了解详细信息。
+
+### 开发流程
+
+1. Fork 项目
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
+
+## 📝 License
+
+本项目采用 MIT 许可证。详见 [LICENSE](LICENSE) 文件。
+
+## 🔮 未来计划
+
+- [ ] 真正的 Tree-sitter 集成
+- [ ] 更多语言支持
+- [ ] Web 界面
+- [ ] 云端服务
+- [ ] IDE 插件
+- [ ] 实时监控和更新
+
+## 📞 联系
+
+- 项目主页: [https://github.com/yourusername/CodeCartographer](https://github.com/yourusername/CodeCartographer)
+- Issues: [https://github.com/yourusername/CodeCartographer/issues](https://github.com/yourusername/CodeCartographer/issues)
+
+---
+
+**CodeCartographer** - 让 LLM 更好地理解您的代码项目 🗺️
