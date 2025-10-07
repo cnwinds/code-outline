@@ -30,9 +30,8 @@ func NewScanner(parser FileParser, excludePatterns []string) *Scanner {
 }
 
 // ScanProject 扫描整个项目
-func (s *Scanner) ScanProject(projectPath string) (map[string]models.FileInfo, []string, error) {
-	files := make(map[string]models.FileInfo)
-	var techStack []string
+func (s *Scanner) ScanProject(projectPath string) (files map[string]models.FileInfo, techStack []string, err error) {
+	files = make(map[string]models.FileInfo)
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 
@@ -51,14 +50,38 @@ func (s *Scanner) ScanProject(projectPath string) (map[string]models.FileInfo, [
 	}()
 
 	// 遍历项目文件
-	err := filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
+	err := s.walkProjectFiles(projectPath, files, &techStack, &mu, &wg, errorChan)
+
+	// 等待所有goroutine完成
+	wg.Wait()
+	close(errorChan)
+
+	if err != nil {
+		return nil, nil, fmt.Errorf("扫描项目失败: %w", err)
+	}
+
+	// 处理扫描错误
+	s.handleScanErrors(scanErrors, &errorsMu)
+
+	return files, techStack, nil
+}
+
+// walkProjectFiles 遍历项目文件
+func (s *Scanner) walkProjectFiles(
+	projectPath string,
+	files map[string]models.FileInfo,
+	techStack *[]string,
+	mu *sync.Mutex,
+	wg *sync.WaitGroup,
+	errorChan chan error,
+) error {
+	return filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
 		// 跳过目录
 		if info.IsDir() {
-			// 检查是否是排除的目录
 			if s.shouldExclude(path) {
 				return filepath.SkipDir
 			}
@@ -84,39 +107,43 @@ func (s *Scanner) ScanProject(projectPath string) (map[string]models.FileInfo, [
 
 		// 并发解析文件
 		wg.Add(1)
-		go func(filePath, relativePath, fileExt string) {
-			defer wg.Done()
-
-			fileInfo, err := s.parser.ParseFile(filePath)
-			if err != nil {
-				errorChan <- fmt.Errorf("解析文件 %s 失败: %w", relativePath, err)
-				return
-			}
-
-			// 安全地更新结果
-			mu.Lock()
-			files[relativePath] = *fileInfo
-
-			// 收集技术栈信息
-			lang := s.getLanguageFromExtension(fileExt)
-			if lang != "" && !contains(techStack, lang) {
-				techStack = append(techStack, lang)
-			}
-			mu.Unlock()
-		}(path, relPath, ext)
+		go s.parseFileConcurrently(path, relPath, ext, files, techStack, mu, wg, errorChan)
 
 		return nil
 	})
+}
 
-	// 等待所有goroutine完成
-	wg.Wait()
-	close(errorChan)
+// parseFileConcurrently 并发解析文件
+func (s *Scanner) parseFileConcurrently(
+	filePath, relativePath, fileExt string,
+	files map[string]models.FileInfo,
+	techStack *[]string,
+	mu *sync.Mutex,
+	wg *sync.WaitGroup,
+	errorChan chan error,
+) {
+	defer wg.Done()
 
+	fileInfo, err := s.parser.ParseFile(filePath)
 	if err != nil {
-		return nil, nil, fmt.Errorf("扫描项目失败: %w", err)
+		errorChan <- fmt.Errorf("解析文件 %s 失败: %w", relativePath, err)
+		return
 	}
 
-	// 如果有扫描错误，记录但不中断
+	// 安全地更新结果
+	mu.Lock()
+	files[relativePath] = *fileInfo
+
+	// 收集技术栈信息
+	lang := s.getLanguageFromExtension(fileExt)
+	if lang != "" && !contains(*techStack, lang) {
+		*techStack = append(*techStack, lang)
+	}
+	mu.Unlock()
+}
+
+// handleScanErrors 处理扫描错误
+func (s *Scanner) handleScanErrors(scanErrors []error, errorsMu *sync.Mutex) {
 	errorsMu.Lock()
 	errorCount := len(scanErrors)
 	errorsCopy := make([]error, len(scanErrors))
@@ -134,8 +161,6 @@ func (s *Scanner) ScanProject(projectPath string) (map[string]models.FileInfo, [
 			fmt.Printf("  ... 还有 %d 个错误\n", errorCount-5)
 		}
 	}
-
-	return files, techStack, nil
 }
 
 // shouldExclude 检查路径是否应该被排除

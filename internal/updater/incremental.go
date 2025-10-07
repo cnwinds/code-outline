@@ -42,7 +42,10 @@ type FileChange struct {
 }
 
 // UpdateProject 增量更新项目上下文
-func (u *IncrementalUpdater) UpdateProject(contextPath, projectPath string, excludePatterns []string) (*models.ProjectContext, []FileChange, error) {
+func (u *IncrementalUpdater) UpdateProject(
+	contextPath, projectPath string,
+	excludePatterns []string,
+) (*models.ProjectContext, []FileChange, error) {
 	// 1. 加载现有的项目上下文
 	existingContext, err := u.loadExistingContext(contextPath)
 	if err != nil {
@@ -62,10 +65,7 @@ func (u *IncrementalUpdater) UpdateProject(contextPath, projectPath string, excl
 	}
 
 	// 4. 应用变更
-	updatedContext, err := u.applyChanges(existingContext, changes)
-	if err != nil {
-		return nil, nil, fmt.Errorf("应用变更失败: %w", err)
-	}
+	updatedContext := u.applyChanges(existingContext, changes)
 
 	// 5. 更新时间戳
 	updatedContext.LastUpdated = time.Now()
@@ -93,7 +93,11 @@ func (u *IncrementalUpdater) loadExistingContext(contextPath string) (*models.Pr
 }
 
 // detectFileChanges 检测文件变更
-func (u *IncrementalUpdater) detectFileChanges(context *models.ProjectContext, projectPath string, excludePatterns []string) ([]FileChange, error) {
+func (u *IncrementalUpdater) detectFileChanges(
+	context *models.ProjectContext,
+	projectPath string,
+	excludePatterns []string,
+) ([]FileChange, error) {
 	var changes []FileChange
 	currentFiles := make(map[string]bool)
 
@@ -141,20 +145,18 @@ func (u *IncrementalUpdater) detectFileChanges(context *models.ProjectContext, p
 				ChangeType: FileAdded,
 				NewInfo:    newInfo,
 			})
-		} else {
+		} else if u.isFileModified(path, &existingFile) {
 			// 检查文件是否被修改
-			if u.isFileModified(path, &existingFile) {
-				newInfo, err := u.parser.ParseFile(path)
-				if err != nil {
-					return err
-				}
-				changes = append(changes, FileChange{
-					Path:       relPath,
-					ChangeType: FileModified,
-					OldInfo:    &existingFile,
-					NewInfo:    newInfo,
-				})
+			newInfo, err := u.parser.ParseFile(path)
+			if err != nil {
+				return err
 			}
+			changes = append(changes, FileChange{
+				Path:       relPath,
+				ChangeType: FileModified,
+				OldInfo:    &existingFile,
+				NewInfo:    newInfo,
+			})
 		}
 
 		return nil
@@ -194,7 +196,7 @@ func (u *IncrementalUpdater) isFileModified(filePath string, existingInfo *model
 }
 
 // applyChanges 应用文件变更
-func (u *IncrementalUpdater) applyChanges(context *models.ProjectContext, changes []FileChange) (*models.ProjectContext, error) {
+func (u *IncrementalUpdater) applyChanges(context *models.ProjectContext, changes []FileChange) *models.ProjectContext {
 	// 创建上下文副本
 	updatedContext := *context
 	updatedFiles := make(map[string]models.FileInfo)
@@ -224,7 +226,7 @@ func (u *IncrementalUpdater) applyChanges(context *models.ProjectContext, change
 	// 重新生成模块摘要
 	updatedContext.Architecture.ModuleSummary = u.generateModuleSummary(updatedFiles)
 
-	return &updatedContext, nil
+	return &updatedContext
 }
 
 // generateModuleSummary 生成模块摘要

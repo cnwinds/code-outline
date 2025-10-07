@@ -129,7 +129,7 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 	fmt.Println("📦 构建项目上下文...")
 	projectName := filepath.Base(projectPath)
 	if projectName == "." {
-		if cwd, err := os.Getwd(); err == nil {
+		if cwd, getCwdErr := os.Getwd(); getCwdErr == nil {
 			projectName = filepath.Base(cwd)
 		} else {
 			projectName = "Unknown Project"

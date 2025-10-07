@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,6 +15,13 @@ import (
 
 	"github.com/cnwinds/CodeCartographer/internal/config"
 	"github.com/cnwinds/CodeCartographer/internal/models"
+)
+
+const (
+	langGo         = "go"
+	langJavaScript = "javascript"
+	langTypeScript = "typescript"
+	langPython     = "python"
 )
 
 // TreeSitterParser Tree-sitter 解析器
@@ -30,15 +38,13 @@ func NewTreeSitterParser(languagesConfig models.LanguagesConfig) (*TreeSitterPar
 	}
 
 	// 初始化各语言解析器
-	if err := p.initParsers(); err != nil {
-		return nil, err
-	}
+	p.initParsers()
 
 	return p, nil
 }
 
 // initParsers 初始化语言解析器
-func (p *TreeSitterParser) initParsers() error {
+func (p *TreeSitterParser) initParsers() {
 	// Go 语言
 	goParser := sitter.NewParser()
 	goParser.SetLanguage(golang.GetLanguage())
@@ -54,8 +60,6 @@ func (p *TreeSitterParser) initParsers() error {
 	pyParser := sitter.NewParser()
 	pyParser.SetLanguage(python.GetLanguage())
 	p.parsers["python"] = pyParser
-
-	return nil
 }
 
 // ParseFile 解析单个文件
@@ -77,11 +81,11 @@ func (p *TreeSitterParser) ParseFile(filePath string) (*models.FileInfo, error) 
 	parser := sitter.NewParser()
 	var language *sitter.Language
 	switch langName {
-	case "go":
+	case langGo:
 		language = golang.GetLanguage()
-	case "javascript", "typescript":
+	case langJavaScript, langTypeScript:
 		language = javascript.GetLanguage()
-	case "python":
+	case langPython:
 		language = python.GetLanguage()
 	default:
 		return nil, fmt.Errorf("未找到 %s 语言的解析器", langName)
@@ -100,7 +104,7 @@ func (p *TreeSitterParser) ParseFile(filePath string) (*models.FileInfo, error) 
 		}()
 
 		// 解析
-		tree := parser.Parse(nil, content)
+		tree, _ := parser.ParseCtx(context.TODO(), nil, content)
 		if tree == nil {
 			parseErr = fmt.Errorf("解析失败: tree is nil")
 			return
@@ -150,11 +154,11 @@ func (p *TreeSitterParser) extractSymbols(node *sitter.Node, content []byte, lan
 	// 获取语言对象
 	var language *sitter.Language
 	switch lang {
-	case "go":
+	case langGo:
 		language = golang.GetLanguage()
-	case "javascript", "typescript":
+	case langJavaScript, langTypeScript:
 		language = javascript.GetLanguage()
-	case "python":
+	case langPython:
 		language = python.GetLanguage()
 	default:
 		return symbols
