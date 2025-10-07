@@ -91,7 +91,7 @@ func (p *TreeSitterParser) ParseFile(filePath string) (*models.FileInfo, error) 
 	// 使用 defer-recover 捕获可能的 panic
 	var symbols []models.Symbol
 	var parseErr error
-	
+
 	func() {
 		defer func() {
 			if r := recover(); r != nil {

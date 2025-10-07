@@ -91,7 +91,9 @@ jobs:
     - name: Install build dependencies (macOS)
       if: matrix.os == 'macos-latest'
       run: |
-        xcode-select --install || true
+        # Xcode Command Line Tools 通常已预装在 GitHub Actions 的 macOS 环境中
+        # 验证是否可用
+        xcode-select -p || xcode-select --install
 
     - name: Install build dependencies (Windows)
       if: matrix.os == 'windows-latest'
@@ -102,17 +104,20 @@ jobs:
       run: |
         CGO_ENABLED=1 go build -v ./cmd/contextgen
 
-    - name: Build all platforms
-      if: matrix.os == 'ubuntu-latest'
+    - name: Build platform binary
       run: |
-        CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -o build/contextgen-windows-amd64.exe ./cmd/contextgen
-        CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o build/contextgen-linux-amd64 ./cmd/contextgen
-        CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -o build/contextgen-darwin-amd64 ./cmd/contextgen
-        CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build -o build/contextgen-darwin-arm64 ./cmd/contextgen
+        mkdir -p build
+        if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+          CGO_ENABLED=1 go build -o build/contextgen-linux-amd64 ./cmd/contextgen
+        elif [ "${{ matrix.os }}" == "macos-latest" ]; then
+          CGO_ENABLED=1 go build -o build/contextgen-darwin-amd64 ./cmd/contextgen
+        elif [ "${{ matrix.os }}" == "windows-latest" ]; then
+          CGO_ENABLED=1 go build -o build/contextgen-windows-amd64.exe ./cmd/contextgen
+        fi
+      shell: bash
 
     - name: Upload artifacts
-      if: matrix.os == 'ubuntu-latest'
       uses: actions/upload-artifact@v4
       with:
-        name: binaries
+        name: binary-${{ matrix.os }}
         path: build/*
