@@ -16,7 +16,7 @@ all: clean build
 build:
 	@echo "🔨 构建 CodeCartographer..."
 	@mkdir -p ${BUILD_DIR}
-	go build ${LDFLAGS} -o ${BUILD_DIR}/${BINARY_NAME} ${MAIN_PATH}
+	CGO_ENABLED=1 go build ${LDFLAGS} -o ${BUILD_DIR}/${BINARY_NAME} ${MAIN_PATH}
 	@echo "✅ 构建完成: ${BUILD_DIR}/${BINARY_NAME}"
 
 # 跨平台构建
@@ -27,18 +27,26 @@ build-all:
 	
 	# Windows
 	@echo "构建 Windows 版本..."
-	GOOS=windows GOARCH=amd64 go build ${LDFLAGS} -o ${BUILD_DIR}/${BINARY_NAME}-windows-amd64.exe ${MAIN_PATH}
+	CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build ${LDFLAGS} -o ${BUILD_DIR}/${BINARY_NAME}-windows-amd64.exe ${MAIN_PATH}
 	
 	# Linux
 	@echo "构建 Linux 版本..."
-	GOOS=linux GOARCH=amd64 go build ${LDFLAGS} -o ${BUILD_DIR}/${BINARY_NAME}-linux-amd64 ${MAIN_PATH}
+	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build ${LDFLAGS} -o ${BUILD_DIR}/${BINARY_NAME}-linux-amd64 ${MAIN_PATH}
 	
 	# macOS
 	@echo "构建 macOS 版本..."
-	GOOS=darwin GOARCH=amd64 go build ${LDFLAGS} -o ${BUILD_DIR}/${BINARY_NAME}-darwin-amd64 ${MAIN_PATH}
-	GOOS=darwin GOARCH=arm64 go build ${LDFLAGS} -o ${BUILD_DIR}/${BINARY_NAME}-darwin-arm64 ${MAIN_PATH}
+	CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build ${LDFLAGS} -o ${BUILD_DIR}/${BINARY_NAME}-darwin-amd64 ${MAIN_PATH}
+	CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build ${LDFLAGS} -o ${BUILD_DIR}/${BINARY_NAME}-darwin-arm64 ${MAIN_PATH}
 	
 	@echo "✅ 跨平台构建完成"
+
+# 构建简单版本（不使用 Tree-sitter）
+.PHONY: build-simple
+build-simple:
+	@echo "🔨 构建 CodeCartographer (无 Tree-sitter)..."
+	@mkdir -p ${BUILD_DIR}
+	CGO_ENABLED=0 go build ${LDFLAGS} -tags simple -o ${BUILD_DIR}/${BINARY_NAME} ${MAIN_PATH}
+	@echo "✅ 构建完成: ${BUILD_DIR}/${BINARY_NAME}"
 
 # 运行程序
 .PHONY: run
@@ -116,7 +124,8 @@ example: build
 .PHONY: help
 help:
 	@echo "CodeCartographer Makefile 命令:"
-	@echo "  build        - 构建二进制文件"
+	@echo "  build        - 构建二进制文件 (启用 CGO)"
+	@echo "  build-simple - 构建简单版本 (无 Tree-sitter)"
 	@echo "  build-all    - 跨平台构建"
 	@echo "  run          - 构建并运行程序"
 	@echo "  test         - 运行测试"

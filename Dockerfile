@@ -4,8 +4,8 @@ FROM golang:1.21-alpine AS builder
 # 设置工作目录
 WORKDIR /app
 
-# 安装必要的包
-RUN apk add --no-cache git gcc musl-dev
+# 安装必要的包（支持 CGO）
+RUN apk add --no-cache git gcc musl-dev g++
 
 # 复制go模块文件
 COPY go.mod go.sum ./
@@ -16,8 +16,8 @@ RUN go mod download
 # 复制源代码
 COPY . .
 
-# 构建应用
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o contextgen ./cmd/contextgen
+# 构建应用（启用 CGO）
+RUN CGO_ENABLED=1 GOOS=linux go build -a -o contextgen ./cmd/contextgen
 
 # 使用精简的alpine镜像作为运行环境
 FROM alpine:latest

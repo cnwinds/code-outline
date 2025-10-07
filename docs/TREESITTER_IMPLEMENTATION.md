@@ -2,7 +2,7 @@
 
 本文档提供了在 CodeCartographer 中实现 Tree-sitter 解析器的完整指南。
 
-> **当前状态**: Tree-sitter 功能正在开发中。本指南提供实现路线图和技术细节。
+> **当前状态**: Tree-sitter 功能已集成完成。本指南提供实现细节和使用说明。
 
 ---
 
@@ -34,9 +34,10 @@ Tree-sitter 是一个解析器生成器工具和增量解析库。它可以为�
 
 ### 当前状态
 
-- ❌ Tree-sitter 解析器未实现
-- ✅ 正则表达式解析器可用（临时方案）
-- ✅ 配置结构已准备好
+- ✅ Tree-sitter 解析器已实现
+- ✅ 支持 Go、JavaScript、Python 三种语言
+- ✅ 正则表达式解析器作为后备方案
+- ✅ 配置结构已完成
 - ✅ 接口设计已完成
 
 ---
@@ -567,12 +568,12 @@ newTree := parser.Parse(oldTree, newContent)
 
 ## 9. 开发路线图
 
-### Phase 1: 基础实现（1-2 周）
+### Phase 1: 基础实现（已完成）
 - [x] 环境准备
-- [ ] Go 语言解析
-- [ ] JavaScript 解析
-- [ ] Python 解析
-- [ ] 基础测试
+- [x] Go 语言解析
+- [x] JavaScript 解析
+- [x] Python 解析
+- [x] 基础测试
 
 ### Phase 2: 功能增强（2-3 周）
 - [ ] 更多语言支持

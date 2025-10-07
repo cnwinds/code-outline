@@ -14,7 +14,7 @@
 - 🎯 **LLM 优化**: 为 LLM Token 效率极致优化的 JSON 输出格式
 - 🔧 **可配置**: 灵活的排除规则和自定义配置
 - 📦 **跨平台**: 支持 Windows、Linux、macOS
-- 🔍 **智能解析**: 基于正则表达式的多语言符号提取
+- 🔍 **智能解析**: 基于 Tree-sitter 的高精度语法解析，支持复杂嵌套结构
 
 ## 🚀 快速开始
 
@@ -25,8 +25,11 @@
 git clone https://github.com/yourusername/CodeCartographer.git
 cd CodeCartographer
 
-# 构建项目
+# 构建项目（启用 Tree-sitter）
 make build
+
+# 构建简单版本（无 Tree-sitter，无需 C 编译器）
+make build-simple
 
 # 或者直接运行
 make run
@@ -49,6 +52,9 @@ make run
 
 # 使用自定义配置
 ./build/contextgen generate --config my_languages.json
+
+# 禁用 Tree-sitter 解析器（使用简单解析器）
+./build/contextgen generate --treesitter=false
 ```
 
 ## 📋 支持的语言
@@ -127,6 +133,16 @@ $ ./contextgen generate
 
 ## 🛠️ 开发
 
+### 环境要求
+
+**Tree-sitter 解析器需要 C 编译器支持：**
+
+- **Windows**: 安装 [MSYS2](https://www.msys2.org/) 和 MinGW-w64
+- **Linux**: 安装 `build-essential` 包
+- **macOS**: 安装 Xcode Command Line Tools
+
+详细安装指南请参考：[Windows CGO 环境安装文档](docs/WINDOWS_CGO_SETUP.md)
+
 ### 项目结构
 
 ```
@@ -147,8 +163,11 @@ CodeCartographer/
 ### 构建命令
 
 ```bash
-# 构建项目
+# 构建项目（启用 Tree-sitter）
 make build
+
+# 构建简单版本（无 Tree-sitter）
+make build-simple
 
 # 跨平台构建
 make build-all
@@ -246,7 +265,7 @@ CodeCartographer 生成的上下文文件可以作为：
 
 欢迎贡献代码！请查看 [CONTRIBUTING.md](CONTRIBUTING.md) 了解详细信息。
 
-> **注意**: Tree-sitter 功能目前正在开发中，当前版本仅支持基于正则表达式的解析器。
+> **注意**: Tree-sitter 解析器已集成完成，提供更高精度的语法解析。如果遇到 CGO 编译问题，可以使用 `--treesitter=false` 参数回退到简单解析器。
 
 ### 开发流程
 
@@ -262,8 +281,9 @@ CodeCartographer 生成的上下文文件可以作为：
 
 ## 🔮 未来计划
 
-- [ ] 真正的 Tree-sitter 集成（开发中）
+- [x] Tree-sitter 集成（已完成）
 - [ ] 更多语言支持
+- [ ] 注释提取优化
 - [ ] Web 界面
 - [ ] 云端服务
 - [ ] IDE 插件
@@ -274,7 +294,7 @@ CodeCartographer 生成的上下文文件可以作为：
 ### 常见问题
 
 **Q: Tree-sitter 解析器无法使用？**
-A: 当前版本 Tree-sitter 功能正在开发中，请使用 `--treesitter=false` 参数使用正则表达式解析器。
+A: 请确保已安装 C 编译器。Windows 用户请参考 [Windows CGO 环境安装文档](docs/WINDOWS_CGO_SETUP.md)。如果仍有问题，可使用 `--treesitter=false` 参数回退到简单解析器。
 
 **Q: 扫描大项目时内存占用过高？**
 A: 这是已知问题，建议使用 `--exclude` 参数排除不必要的目录，如 `node_modules`、`vendor` 等。
