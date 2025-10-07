@@ -57,8 +57,6 @@ func createDefaultLanguagesConfig(configPath string) (models.LanguagesConfig, er
 					"(const_declaration) @symbol",
 					"(var_declaration) @symbol",
 				},
-				ContainerBody:    "(block) @body | (struct_type) @body | (interface_type) @body",
-				ContainerMethods: "(method_declaration) @method",
 			},
 		},
 		"javascript": {
@@ -66,14 +64,12 @@ func createDefaultLanguagesConfig(configPath string) (models.LanguagesConfig, er
 			Queries: models.Queries{
 				TopLevelSymbols: []string{
 					"(function_declaration) @symbol",
-					"(arrow_function) @symbol",
+					"(variable_declarator value: (arrow_function)) @symbol",
 					"(class_declaration) @symbol",
 					"(const_declaration) @symbol",
 					"(let_declaration) @symbol",
 					"(var_declaration) @symbol",
 				},
-				ContainerBody:    "(class_body) @body | (object) @body",
-				ContainerMethods: "(method_definition) @method",
 			},
 		},
 		"python": {
@@ -82,10 +78,8 @@ func createDefaultLanguagesConfig(configPath string) (models.LanguagesConfig, er
 				TopLevelSymbols: []string{
 					"(function_definition) @symbol",
 					"(class_definition) @symbol",
-					"(assignment) @symbol",
+					"(assignment target: (identifier) @name) @symbol",
 				},
-				ContainerBody:    "(block) @body",
-				ContainerMethods: "(function_definition) @method",
 			},
 		},
 	}

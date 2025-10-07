@@ -43,9 +43,7 @@ type LanguageConfig struct {
 
 // Queries 表示Tree-sitter查询规则
 type Queries struct {
-	TopLevelSymbols  []string `json:"top_level_symbols"` // 顶级符号查询
-	ContainerBody    string   `json:"container_body"`    // 容器主体查询
-	ContainerMethods string   `json:"container_methods"` // 容器方法查询
+	TopLevelSymbols []string `json:"top_level_symbols"` // 顶级符号查询
 }
 
 // LanguagesConfig 表示所有语言的配置

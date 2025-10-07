@@ -210,7 +210,7 @@ func (p *TreeSitterParser) nodeToSymbol(node *sitter.Node, content []byte) model
 // extractPrototype 提取函数原型（不包括函数体）
 func (p *TreeSitterParser) extractPrototype(node *sitter.Node, content []byte) string {
 	nodeType := node.Type()
-	
+
 	// 对于 class 节点，只提取类声明部分（类名和可能的继承）
 	if nodeType == "class_declaration" {
 		// 查找 class_body 子节点
@@ -220,7 +220,7 @@ func (p *TreeSitterParser) extractPrototype(node *sitter.Node, content []byte) s
 			if child == nil {
 				continue
 			}
-			
+
 			if child.Type() == "class_body" {
 				// 提取到 class_body 之前的内容
 				prototype := string(content[node.StartByte():child.StartByte()])
@@ -228,7 +228,7 @@ func (p *TreeSitterParser) extractPrototype(node *sitter.Node, content []byte) s
 			}
 		}
 	}
-	
+
 	// 对于 Python 的 class_definition，查找冒号
 	if nodeType == "class_definition" {
 		fullText := string(content[node.StartByte():node.EndByte()])
@@ -245,38 +245,38 @@ func (p *TreeSitterParser) extractPrototype(node *sitter.Node, content []byte) s
 			}
 		}
 	}
-	
+
 	// 通过遍历子节点找到函数体（block/body）并排除它
 	var declarationEnd uint32
 	hasBody := false
-	
+
 	childCount := int(node.ChildCount())
 	for i := 0; i < childCount; i++ {
 		child := node.Child(i)
 		if child == nil {
 			continue
 		}
-		
+
 		childType := child.Type()
-		
+
 		// Go: block
 		// JavaScript/TypeScript: statement_block
 		// Python: block
-		if childType == "block" || childType == "statement_block" || 
-		   childType == "body" || childType == "function_body" {
+		if childType == "block" || childType == "statement_block" ||
+			childType == "body" || childType == "function_body" {
 			// 找到函数体，记录其起始位置
 			declarationEnd = child.StartByte()
 			hasBody = true
 			break
 		}
 	}
-	
+
 	if hasBody && declarationEnd > node.StartByte() {
 		// 提取从节点开始到函数体之前的内容
 		prototype := string(content[node.StartByte():declarationEnd])
 		return strings.TrimSpace(prototype)
 	}
-	
+
 	// 对于 Python 的函数定义，查找冒号
 	if nodeType == "function_definition" {
 		fullText := string(content[node.StartByte():node.EndByte()])
@@ -293,7 +293,7 @@ func (p *TreeSitterParser) extractPrototype(node *sitter.Node, content []byte) s
 			}
 		}
 	}
-	
+
 	// 如果没有找到函数体（可能是接口方法声明、类型定义等），返回整个节点
 	fullText := string(content[node.StartByte():node.EndByte()])
 	return strings.TrimSpace(fullText)
