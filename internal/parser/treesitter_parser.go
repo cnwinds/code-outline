@@ -568,6 +568,17 @@ func (p *TreeSitterParser) extractPurpose(node *sitter.Node, content []byte) str
 			continue
 		}
 		
+		// Python: """docstring""" 或 # 注释
+		if strings.HasPrefix(line, "\"\"\"") {
+			// 提取 docstring
+			docstring := strings.TrimPrefix(line, "\"\"\"")
+			docstring = strings.TrimSuffix(docstring, "\"\"\"")
+			docstring = strings.TrimSpace(docstring)
+			if docstring != "" {
+				return docstring
+			}
+		}
+		
 		// 单行注释: #, //, /*
 		if strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") || strings.HasPrefix(line, "/*") {
 			comment := strings.TrimSpace(strings.TrimPrefix(line, "#"))
