@@ -55,6 +55,30 @@ make run
 
 # 禁用 Tree-sitter 解析器（使用简单解析器）
 ./build/contextgen generate --treesitter=false
+
+# 增量更新项目上下文
+./build/contextgen update
+
+# 更新指定文件
+./build/contextgen update --files "main.go,config.go"
+
+# 更新指定目录
+./build/contextgen update --dirs "internal/,cmd/"
+
+# 同时更新指定文件和目录
+./build/contextgen update --files "main.go" --dirs "internal/"
+
+# 获取所有文件和方法定义
+./build/contextgen data
+
+# 获取指定文件的数据
+./build/contextgen data --files "main.go,config.go"
+
+# 获取指定目录的数据
+./build/contextgen data --dirs "internal/,cmd/"
+
+# 保存数据到文件
+./build/contextgen data --files "main.go" --output data.json
 ```
 
 ## 📋 支持的语言
@@ -494,6 +518,156 @@ make docker-run
 - 修改 `languages.json` 添加新语言支持
 - 调整正则表达式模式以改进符号识别
 - 配置文件扩展名映射
+
+## 🔄 更新模式
+
+CodeCartographer 支持增量更新模式，可以只更新指定的文件或目录，大大提高更新效率：
+
+### 基本更新命令
+
+```bash
+# 检测所有文件变更并更新
+./build/contextgen update
+
+# 指定项目路径和输出文件
+./build/contextgen update --path /path/to/project --output my_context.json
+```
+
+### 指定文件更新
+
+```bash
+# 更新单个文件
+./build/contextgen update --files "main.go"
+
+# 更新多个文件
+./build/contextgen update --files "main.go,config.go,utils.go"
+
+# 更新指定路径的文件
+./build/contextgen update --files "cmd/main.go,internal/config/config.go"
+```
+
+### 指定目录更新
+
+```bash
+# 更新单个目录
+./build/contextgen update --dirs "internal/"
+
+# 更新多个目录
+./build/contextgen update --dirs "internal/,cmd/,pkg/"
+
+# 更新子目录
+./build/contextgen update --dirs "internal/parser/,internal/scanner/"
+```
+
+### 混合更新模式
+
+```bash
+# 同时更新指定文件和目录
+./build/contextgen update --files "main.go" --dirs "internal/"
+
+# 结合排除规则
+./build/contextgen update --files "main.go" --exclude "*.test.go"
+```
+
+### 更新模式的优势
+
+- **高效**: 只解析指定的文件，避免全量扫描
+- **精确**: 针对特定文件或目录进行更新
+- **快速**: 大幅减少更新时间和资源消耗
+- **灵活**: 支持文件和目录的任意组合
+
+## 📊 数据获取模式
+
+CodeCartographer 支持数据获取模式，可以获取指定文件或目录中的所有文件和方法定义，返回结构化的JSON数据：
+
+### 基本数据获取命令
+
+```bash
+# 获取所有文件和方法定义
+./build/contextgen data
+
+# 指定项目路径
+./build/contextgen data --path /path/to/project
+
+# 输出到文件
+./build/contextgen data --output data.json
+```
+
+### 指定文件数据获取
+
+```bash
+# 获取单个文件的数据
+./build/contextgen data --files "main.go"
+
+# 获取多个文件的数据
+./build/contextgen data --files "main.go,config.go,utils.go"
+
+# 获取指定路径的文件数据
+./build/contextgen data --files "cmd/main.go,internal/config/config.go"
+```
+
+### 指定目录数据获取
+
+```bash
+# 获取单个目录的数据
+./build/contextgen data --dirs "internal/"
+
+# 获取多个目录的数据
+./build/contextgen data --dirs "internal/,cmd/,pkg/"
+
+# 获取子目录的数据
+./build/contextgen data --dirs "internal/parser/,internal/scanner/"
+```
+
+### 混合数据获取模式
+
+```bash
+# 同时获取指定文件和目录的数据
+./build/contextgen data --files "main.go" --dirs "internal/"
+
+# 结合排除规则
+./build/contextgen data --files "main.go" --exclude "*.test.go"
+
+# 输出到标准输出（不指定output参数）
+./build/contextgen data --files "main.go"
+```
+
+### 数据获取模式的优势
+
+- **结构化**: 返回标准化的JSON格式数据
+- **精确**: 可以指定特定的文件或目录
+- **完整**: 包含所有文件和方法定义信息
+- **灵活**: 支持多种输出方式（文件或标准输出）
+
+### 输出格式
+
+数据获取模式返回的JSON格式包含：
+
+```json
+{
+  "files": {
+    "path/to/file.go": {
+      "purpose": "文件用途描述",
+      "symbols": [
+        {
+          "prototype": "func Example() error",
+          "purpose": "函数说明",
+          "range": [10, 15],
+          "body": "函数体内容",
+          "methods": []
+        }
+      ],
+      "lastModified": "2025-01-01T12:00:00Z",
+      "fileSize": 1024
+    }
+  },
+  "stats": {
+    "totalFiles": 10,
+    "totalSymbols": 50,
+    "languages": ["Go", "JavaScript"]
+  }
+}
+```
 
 ## 🎯 使用场景
 

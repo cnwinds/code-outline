@@ -45,6 +45,8 @@ type FileChange struct {
 func (u *IncrementalUpdater) UpdateProject(
 	contextPath, projectPath string,
 	excludePatterns []string,
+	targetFiles []string,
+	targetDirs []string,
 ) (*models.ProjectContext, []FileChange, error) {
 	// 1. 加载现有的项目上下文
 	existingContext, err := u.loadExistingContext(contextPath)
@@ -53,7 +55,7 @@ func (u *IncrementalUpdater) UpdateProject(
 	}
 
 	// 2. 扫描项目文件，检测变更
-	changes, err := u.detectFileChanges(existingContext, projectPath, excludePatterns)
+	changes, err := u.detectFileChanges(existingContext, projectPath, excludePatterns, targetFiles, targetDirs)
 	if err != nil {
 		return nil, nil, fmt.Errorf("检测文件变更失败: %w", err)
 	}
@@ -97,9 +99,21 @@ func (u *IncrementalUpdater) detectFileChanges(
 	context *models.ProjectContext,
 	projectPath string,
 	excludePatterns []string,
+	targetFiles []string,
+	targetDirs []string,
 ) ([]FileChange, error) {
 	var changes []FileChange
 	currentFiles := make(map[string]bool)
+
+	// 如果指定了目标文件或目录，只处理这些文件
+	if len(targetFiles) > 0 || len(targetDirs) > 0 {
+		var err error
+		changes, err = u.detectTargetChanges(context, projectPath, excludePatterns, targetFiles, targetDirs)
+		if err != nil {
+			return nil, err
+		}
+		return changes, nil
+	}
 
 	// 遍历项目文件
 	err := filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
@@ -175,6 +189,163 @@ func (u *IncrementalUpdater) detectFileChanges(
 				ChangeType: FileDeleted,
 				OldInfo:    &existingFile,
 			})
+		}
+	}
+
+	return changes, nil
+}
+
+// detectTargetChanges 检测指定文件和目录的变更
+func (u *IncrementalUpdater) detectTargetChanges(
+	context *models.ProjectContext,
+	projectPath string,
+	excludePatterns []string,
+	targetFiles []string,
+	targetDirs []string,
+) ([]FileChange, error) {
+	var changes []FileChange
+
+	// 处理指定的文件
+	for _, targetFile := range targetFiles {
+		// 标准化路径
+		normalizedFile := u.normalizePath(targetFile)
+		resolvedPath := u.resolveTargetPath(projectPath, normalizedFile)
+
+		// 检查文件是否存在
+		if _, err := os.Stat(resolvedPath); os.IsNotExist(err) {
+			// 文件不存在，检查是否在上下文中（可能是被删除的文件）
+			if existingFile, exists := context.Files[normalizedFile]; exists {
+				changes = append(changes, FileChange{
+					Path:       normalizedFile,
+					ChangeType: FileDeleted,
+					OldInfo:    &existingFile,
+				})
+			}
+			continue
+		}
+
+		// 检查是否应该排除
+		if u.shouldExclude(resolvedPath, excludePatterns) {
+			continue
+		}
+
+		// 检查是否为支持的文件类型
+		ext := filepath.Ext(resolvedPath)
+		if !u.isSupportedFile(ext) {
+			continue
+		}
+
+		// 检查文件是否存在于上下文中
+		existingFile, exists := context.Files[normalizedFile]
+		if !exists {
+			// 新文件
+			newInfo, err := u.parser.ParseFile(resolvedPath)
+			if err != nil {
+				return nil, fmt.Errorf("解析文件失败 %s: %w", resolvedPath, err)
+			}
+			changes = append(changes, FileChange{
+				Path:       normalizedFile,
+				ChangeType: FileAdded,
+				NewInfo:    newInfo,
+			})
+		} else if u.isFileModified(resolvedPath, &existingFile) {
+			// 文件被修改
+			newInfo, err := u.parser.ParseFile(resolvedPath)
+			if err != nil {
+				return nil, fmt.Errorf("解析文件失败 %s: %w", resolvedPath, err)
+			}
+			changes = append(changes, FileChange{
+				Path:       normalizedFile,
+				ChangeType: FileModified,
+				OldInfo:    &existingFile,
+				NewInfo:    newInfo,
+			})
+		}
+	}
+
+	// 处理指定的目录
+	for _, targetDir := range targetDirs {
+		// 标准化路径
+		normalizedDir := u.normalizePath(targetDir)
+		resolvedDirPath := u.resolveTargetPath(projectPath, normalizedDir)
+
+		// 检查目录是否存在
+		if _, err := os.Stat(resolvedDirPath); os.IsNotExist(err) {
+			// 目录不存在，检查上下文中是否有该目录下的文件（可能是被删除的）
+			for filePath := range context.Files {
+				if strings.HasPrefix(filePath, normalizedDir) {
+					existingFile := context.Files[filePath]
+					changes = append(changes, FileChange{
+						Path:       filePath,
+						ChangeType: FileDeleted,
+						OldInfo:    &existingFile,
+					})
+				}
+			}
+			continue
+		}
+
+		// 遍历目录下的文件
+		err := filepath.Walk(resolvedDirPath, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+			// 跳过目录
+			if info.IsDir() {
+				return nil
+			}
+
+			// 检查是否应该排除
+			if u.shouldExclude(path, excludePatterns) {
+				return nil
+			}
+
+			// 检查是否为支持的文件类型
+			ext := filepath.Ext(path)
+			if !u.isSupportedFile(ext) {
+				return nil
+			}
+
+			// 转换为相对路径
+			relPath, err := filepath.Rel(projectPath, path)
+			if err != nil {
+				return err
+			}
+			relPath = filepath.ToSlash(relPath) // 统一使用斜杠
+
+			// 检查文件是否存在于上下文中
+			existingFile, exists := context.Files[relPath]
+			if !exists {
+				// 新文件
+				newInfo, err := u.parser.ParseFile(path)
+				if err != nil {
+					return fmt.Errorf("解析文件失败 %s: %w", path, err)
+				}
+				changes = append(changes, FileChange{
+					Path:       relPath,
+					ChangeType: FileAdded,
+					NewInfo:    newInfo,
+				})
+			} else if u.isFileModified(path, &existingFile) {
+				// 文件被修改
+				newInfo, err := u.parser.ParseFile(path)
+				if err != nil {
+					return fmt.Errorf("解析文件失败 %s: %w", path, err)
+				}
+				changes = append(changes, FileChange{
+					Path:       relPath,
+					ChangeType: FileModified,
+					OldInfo:    &existingFile,
+					NewInfo:    newInfo,
+				})
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			return nil, fmt.Errorf("遍历目录失败 %s: %w", resolvedDirPath, err)
 		}
 	}
 
@@ -278,4 +449,37 @@ func (u *IncrementalUpdater) isSupportedFile(ext string) bool {
 		}
 	}
 	return false
+}
+
+// normalizePath 标准化路径，统一处理各种斜杠输入
+func (u *IncrementalUpdater) normalizePath(path string) string {
+	// 统一使用正斜杠
+	path = strings.ReplaceAll(path, "\\", "/")
+
+	// 处理多个连续斜杠
+	for strings.Contains(path, "//") {
+		path = strings.ReplaceAll(path, "//", "/")
+	}
+
+	// 移除末尾的斜杠（除非是根目录）
+	if len(path) > 1 && strings.HasSuffix(path, "/") {
+		path = path[:len(path)-1]
+	}
+
+	return path
+}
+
+// resolveTargetPath 解析目标路径，支持相对路径和绝对路径
+func (u *IncrementalUpdater) resolveTargetPath(projectPath, targetPath string) string {
+	// 标准化输入路径
+	targetPath = u.normalizePath(targetPath)
+	projectPath = u.normalizePath(projectPath)
+
+	// 如果是绝对路径，直接返回
+	if filepath.IsAbs(targetPath) {
+		return targetPath
+	}
+
+	// 如果是相对路径，相对于项目路径
+	return filepath.Join(projectPath, targetPath)
 }
