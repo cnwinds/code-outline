@@ -156,7 +156,9 @@ func (s *Scanner) shouldExclude(path string) bool {
 	}
 
 	// 合并用户指定的排除模式
-	allExcludes := append(defaultExcludes, s.excludePatterns...)
+	allExcludes := make([]string, 0, len(defaultExcludes)+len(s.excludePatterns))
+	allExcludes = append(allExcludes, defaultExcludes...)
+	allExcludes = append(allExcludes, s.excludePatterns...)
 
 	for _, pattern := range allExcludes {
 		// 简单的模式匹配

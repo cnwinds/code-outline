@@ -50,7 +50,9 @@ func TestScanProject(t *testing.T) {
 
 	// 创建子目录
 	subDir := filepath.Join(tmpDir, "subdir")
-	os.MkdirAll(subDir, 0755)
+	if err := os.MkdirAll(subDir, 0755); err != nil {
+		t.Fatalf("创建目录失败: %v", err)
+	}
 	createTestFile(t, subDir, "utils.go", goTestCode)
 
 	// 创建解析器
@@ -226,16 +228,16 @@ func TestScanProjectWithErrors(t *testing.T) {
 	// 应该成功，但文件可能为空
 	require.NoError(t, err)
 
-	// 检查返回值（允许为 nil 或空）
-	_ = files
-	_ = techStack
+	// 验证结果：由于解析器失败，files 应该为空
+	assert.Empty(t, files)
+	assert.Empty(t, techStack)
 }
 
 // 辅助函数
 
 func createTestFile(t *testing.T, dir, name, content string) {
 	path := filepath.Join(dir, name)
-	err := os.WriteFile(path, []byte(content), 0644)
+	err := os.WriteFile(path, []byte(content), 0600)
 	require.NoError(t, err)
 }
 

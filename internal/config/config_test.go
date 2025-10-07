@@ -26,7 +26,7 @@ func TestLoadLanguagesConfig(t *testing.T) {
 		}
 	}`
 
-	err := os.WriteFile(configPath, []byte(configData), 0644)
+	err := os.WriteFile(configPath, []byte(configData), 0600)
 	require.NoError(t, err)
 
 	// 测试加载配置
@@ -57,7 +57,7 @@ func TestLoadLanguagesConfigInvalidJSON(t *testing.T) {
 	configPath := filepath.Join(tmpDir, "invalid.json")
 
 	invalidJSON := `{ invalid json }`
-	err := os.WriteFile(configPath, []byte(invalidJSON), 0644)
+	err := os.WriteFile(configPath, []byte(invalidJSON), 0600)
 	require.NoError(t, err)
 
 	// 测试加载无效配置

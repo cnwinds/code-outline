@@ -101,7 +101,7 @@ func createDefaultLanguagesConfig(configPath string) (models.LanguagesConfig, er
 		return nil, fmt.Errorf("序列化默认配置失败: %w", err)
 	}
 
-	if err := os.WriteFile(configPath, data, 0644); err != nil {
+	if err := os.WriteFile(configPath, data, 0600); err != nil {
 		return nil, fmt.Errorf("写入配置文件失败: %w", err)
 	}
 

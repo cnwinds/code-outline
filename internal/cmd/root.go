@@ -18,11 +18,10 @@ import (
 )
 
 var (
-	projectPath   string
-	outputPath    string
-	configPath    string
-	excludeDirs   string
-	useTreeSitter bool
+	projectPath string
+	outputPath  string
+	configPath  string
+	excludeDirs string
 )
 
 // rootCmd 根命令
@@ -62,14 +61,12 @@ func init() {
 	generateCmd.Flags().StringVarP(&outputPath, "output", "o", "project_context.json", "输出文件路径")
 	generateCmd.Flags().StringVarP(&configPath, "config", "c", "", "语言配置文件路径")
 	generateCmd.Flags().StringVarP(&excludeDirs, "exclude", "e", "", "要排除的目录或文件模式，用逗号分隔")
-	generateCmd.Flags().BoolVarP(&useTreeSitter, "treesitter", "t", true, "使用 Tree-sitter 解析器（默认: true）")
 
 	// 添加update命令行参数
 	updateCmd.Flags().StringVarP(&projectPath, "path", "p", ".", "项目路径")
 	updateCmd.Flags().StringVarP(&outputPath, "output", "o", "project_context.json", "输出文件路径")
 	updateCmd.Flags().StringVarP(&configPath, "config", "c", "", "语言配置文件路径")
 	updateCmd.Flags().StringVarP(&excludeDirs, "exclude", "e", "", "要排除的目录或文件模式，用逗号分隔")
-	updateCmd.Flags().BoolVarP(&useTreeSitter, "treesitter", "t", true, "使用 Tree-sitter 解析器（默认: true）")
 }
 
 // Execute 执行根命令
@@ -103,20 +100,12 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 
 	// 2. 创建解析器
 	fmt.Println("🔧 初始化解析器...")
-	var codeParser scanner.FileParser
-	if useTreeSitter {
-		fmt.Println("🌳 使用 Tree-sitter 解析器")
-		treeSitterParser, err := parser.NewTreeSitterParser(languagesConfig)
-		if err != nil {
-			fmt.Printf("⚠️  Tree-sitter 初始化失败，回退到简单解析器: %v\n", err)
-			codeParser = parser.NewSimpleParser(languagesConfig)
-		} else {
-			codeParser = treeSitterParser
-		}
-	} else {
-		fmt.Println("📝 使用简单正则表达式解析器")
-		codeParser = parser.NewSimpleParser(languagesConfig)
+	fmt.Println("🌳 使用 Tree-sitter 解析器")
+	treeSitterParser, err := parser.NewTreeSitterParser(languagesConfig)
+	if err != nil {
+		return fmt.Errorf("tree-sitter 解析器初始化失败: %w", err)
 	}
+	codeParser := treeSitterParser
 
 	// 3. 解析排除模式
 	var excludePatterns []string
@@ -213,7 +202,7 @@ func saveProjectContext(context *models.ProjectContext, outputPath string) error
 	}
 
 	// 写入文件
-	return os.WriteFile(outputPath, data, 0644)
+	return os.WriteFile(outputPath, data, 0600)
 }
 
 // runUpdate 执行更新命令
@@ -227,20 +216,12 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	// 2. 创建解析器
-	var fileParser scanner.FileParser
-	if useTreeSitter {
-		fmt.Println("🌳 使用 Tree-sitter 解析器")
-		treeSitterParser, err := parser.NewTreeSitterParser(languagesConfig)
-		if err != nil {
-			fmt.Printf("⚠️  Tree-sitter 初始化失败，回退到简单解析器: %v\n", err)
-			fileParser = parser.NewSimpleParser(languagesConfig)
-		} else {
-			fileParser = treeSitterParser
-		}
-	} else {
-		fmt.Println("📝 使用简单正则表达式解析器")
-		fileParser = parser.NewSimpleParser(languagesConfig)
+	fmt.Println("🌳 使用 Tree-sitter 解析器")
+	treeSitterParser, err := parser.NewTreeSitterParser(languagesConfig)
+	if err != nil {
+		return fmt.Errorf("tree-sitter 解析器初始化失败: %w", err)
 	}
+	fileParser := treeSitterParser
 
 	// 3. 创建增量更新器
 	incrementalUpdater := updater.NewIncrementalUpdater(fileParser)

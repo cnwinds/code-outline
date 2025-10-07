@@ -165,11 +165,8 @@ func (p *TreeSitterParser) extractSymbols(node *sitter.Node, content []byte, lan
 		if err != nil {
 			continue
 		}
-		defer query.Close()
 
 		cursor := sitter.NewQueryCursor()
-		defer cursor.Close()
-
 		cursor.Exec(query, node)
 
 		for {
@@ -183,6 +180,9 @@ func (p *TreeSitterParser) extractSymbols(node *sitter.Node, content []byte, lan
 				symbols = append(symbols, symbol)
 			}
 		}
+
+		query.Close()
+		cursor.Close()
 	}
 
 	return symbols
