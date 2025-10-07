@@ -224,7 +224,7 @@ func (p *TreeSitterParser) nodeToSymbol(node *sitter.Node, content []byte) model
 
 	symbol := models.Symbol{
 		Prototype: prototype,
-		Purpose:   "", // TODO: 从注释提取
+		Purpose:   p.extractPurpose(node, content),
 		Range:     []int{int(start.Row) + 1, int(end.Row) + 1},
 	}
 
@@ -275,7 +275,7 @@ func (p *TreeSitterParser) extractClassMethods(classNode *sitter.Node, content [
 					
 					method := models.Symbol{
 						Prototype: methodPrototype,
-						Purpose:   "",
+						Purpose:   p.extractPurpose(bodyChild, content),
 						Range:     []int{int(start.Row) + 1, int(end.Row) + 1},
 					}
 					
@@ -307,7 +307,7 @@ func (p *TreeSitterParser) extractClassMethods(classNode *sitter.Node, content [
 					
 					method := models.Symbol{
 						Prototype: methodPrototype,
-						Purpose:   "",
+						Purpose:   p.extractPurpose(blockChild, content),
 						Range:     []int{int(start.Row) + 1, int(end.Row) + 1},
 					}
 					
@@ -326,7 +326,7 @@ func (p *TreeSitterParser) extractClassMethods(classNode *sitter.Node, content [
 			
 			method := models.Symbol{
 				Prototype: methodPrototype,
-				Purpose:   "",
+				Purpose:   p.extractPurpose(child, content),
 				Range:     []int{int(start.Row) + 1, int(end.Row) + 1},
 			}
 			
@@ -544,6 +544,89 @@ func (p *TreeSitterParser) extractFilePurpose(content []byte) string {
 	}
 
 	return "TODO: Describe the purpose of this file."
+}
+
+// extractPurpose 提取符号的注释/说明
+func (p *TreeSitterParser) extractPurpose(node *sitter.Node, content []byte) string {
+	// 获取节点开始位置
+	startPoint := node.StartPoint()
+	startRow := int(startPoint.Row)
+	
+	// 将内容按行分割
+	lines := strings.Split(string(content), "\n")
+	
+	// 检查节点前的注释
+	for i := startRow - 1; i >= 0; i-- {
+		if i >= len(lines) {
+			continue
+		}
+		
+		line := strings.TrimSpace(lines[i])
+		
+		// 跳过空行
+		if line == "" {
+			continue
+		}
+		
+		// Python: """docstring""" 或 # 注释
+		if strings.HasPrefix(line, "\"\"\"") {
+			// 提取 docstring
+			docstring := strings.TrimPrefix(line, "\"\"\"")
+			docstring = strings.TrimSuffix(docstring, "\"\"\"")
+			docstring = strings.TrimSpace(docstring)
+			if docstring != "" {
+				return docstring
+			}
+		}
+		
+		// 单行注释: #, //, /*
+		if strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") || strings.HasPrefix(line, "/*") {
+			comment := strings.TrimSpace(strings.TrimPrefix(line, "#"))
+			comment = strings.TrimSpace(strings.TrimPrefix(comment, "//"))
+			comment = strings.TrimSpace(strings.TrimPrefix(comment, "/*"))
+			comment = strings.TrimSpace(strings.TrimSuffix(comment, "*/"))
+			if comment != "" {
+				return comment
+			}
+		}
+		
+		// 如果遇到非注释行，停止查找
+		if !strings.HasPrefix(line, "#") && !strings.HasPrefix(line, "//") && !strings.HasPrefix(line, "/*") && line != "" {
+			break
+		}
+	}
+	
+	// 检查节点内部的注释（对于类和方法）
+	nodeType := node.Type()
+	if nodeType == "class_definition" || nodeType == "function_definition" || nodeType == "method_definition" {
+		// 查找节点内部的第一个注释
+		childCount := int(node.ChildCount())
+		for i := 0; i < childCount; i++ {
+			child := node.Child(i)
+			if child == nil {
+				continue
+			}
+			
+			childType := child.Type()
+			if childType == "expression_statement" {
+				// 检查是否是字符串字面量（docstring）
+				childText := string(content[child.StartByte():child.EndByte()])
+				childText = strings.TrimSpace(childText)
+				
+				// Python docstring
+				if strings.HasPrefix(childText, "\"\"\"") && strings.HasSuffix(childText, "\"\"\"") {
+					docstring := strings.TrimPrefix(childText, "\"\"\"")
+					docstring = strings.TrimSuffix(docstring, "\"\"\"")
+					docstring = strings.TrimSpace(docstring)
+					if docstring != "" {
+						return docstring
+					}
+				}
+			}
+		}
+	}
+	
+	return ""
 }
 
 // minInt 返回两个整数中的较小者

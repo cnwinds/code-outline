@@ -2,11 +2,11 @@
   "projectName": "testdata",
   "projectGoal": "TODO: 请在此描述项目目标和主要功能",
   "techStack": [
-    "JavaScript",
     "Go",
+    "JavaScript",
     "Python"
   ],
-  "lastUpdated": "2025-10-07T18:26:45.1085552+08:00",
+  "lastUpdated": "2025-10-07T18:48:38.029165+08:00",
   "architecture": {
     "overview": "TODO: 请在此描述项目的整体架构",
     "moduleSummary": {
@@ -19,7 +19,7 @@
       "symbols": [
         {
           "prototype": "func NewGreeter(name string) *Greeter",
-          "purpose": "",
+          "purpose": "NewGreeter 创建一个新的问候器实例",
           "range": [
             44,
             46
@@ -27,7 +27,7 @@
         },
         {
           "prototype": "func ProcessUserData(\r\n\tuserID int,\r\n\tuserName string,\r\n\temail string,\r\n\tage int,\r\n\tisActive bool,\r\n\tpreferences map[string]interface{},\r\n\tcallback func(string) error,\r\n) (string, error)",
-          "purpose": "",
+          "purpose": "ProcessUserData 处理用户数据，包含多个参数",
           "range": [
             54,
             84
@@ -35,7 +35,7 @@
         },
         {
           "prototype": "func CreateComplexStruct(\r\n\tconfig Config,\r\n\toptions Options,\r\n\thandlers []Handler,\r\n\ttimeout int,\r\n\tretries int,\r\n\tdebug bool,\r\n) (*ComplexStruct, error)",
-          "purpose": "",
+          "purpose": "CreateComplexStruct 创建一个复杂的结构体，包含多行参数",
           "range": [
             87,
             116
@@ -43,7 +43,7 @@
         },
         {
           "prototype": "func main()",
-          "purpose": "",
+          "purpose": "main 程序入口点",
           "range": [
             119,
             177
@@ -51,7 +51,7 @@
         },
         {
           "prototype": "func (g *Greeter) SayHello(person string) string",
-          "purpose": "",
+          "purpose": "SayHello 向指定的人打招呼",
           "range": [
             49,
             51
@@ -59,7 +59,7 @@
         },
         {
           "prototype": "type Greeter struct {\r\n\tName string\r\n}",
-          "purpose": "",
+          "purpose": "Greeter 是一个简单的问候器",
           "range": [
             9,
             11
@@ -67,7 +67,7 @@
         },
         {
           "prototype": "type Config struct {\r\n\tDatabaseURL string\r\n\tAPIVersion  string\r\n\tEnvironment string\r\n}",
-          "purpose": "",
+          "purpose": "Config 配置结构体",
           "range": [
             14,
             18
@@ -75,7 +75,7 @@
         },
         {
           "prototype": "type Options struct {\r\n\tEnableLogging  bool\r\n\tMaxConnections int\r\n\tCacheSize      int\r\n}",
-          "purpose": "",
+          "purpose": "Options 选项结构体",
           "range": [
             21,
             25
@@ -83,7 +83,7 @@
         },
         {
           "prototype": "type Handler interface {\r\n\tProcess(data interface{}) error\r\n}",
-          "purpose": "",
+          "purpose": "Handler 处理器接口",
           "range": [
             28,
             30
@@ -91,7 +91,7 @@
         },
         {
           "prototype": "type ComplexStruct struct {\r\n\tConfig    Config\r\n\tOptions   Options\r\n\tHandlers  []Handler\r\n\tTimeout   int\r\n\tRetries   int\r\n\tDebug     bool\r\n\tCreatedAt time.Time\r\n}",
-          "purpose": "",
+          "purpose": "ComplexStruct 复杂结构体",
           "range": [
             33,
             41
@@ -106,7 +106,7 @@
       "symbols": [
         {
           "prototype": "createUser = (id, name, email) =\u003e {\r\n    return new User(id, name, email);\r\n}",
-          "purpose": "",
+          "purpose": "工具函数",
           "range": [
             39,
             41
@@ -114,7 +114,7 @@
         },
         {
           "prototype": "class UserManager",
-          "purpose": "",
+          "purpose": "用户管理模块",
           "range": [
             2,
             22
@@ -156,7 +156,7 @@
         },
         {
           "prototype": "class User",
-          "purpose": "",
+          "purpose": "用户类",
           "range": [
             25,
             36
@@ -187,54 +187,6 @@
     "example.py": {
       "purpose": "TODO: Describe the purpose of this file.",
       "symbols": [
-        {
-          "prototype": "def __init__(self):",
-          "purpose": "",
-          "range": [
-            10,
-            12
-          ]
-        },
-        {
-          "prototype": "def add_user(self, user):",
-          "purpose": "",
-          "range": [
-            14,
-            24
-          ]
-        },
-        {
-          "prototype": "def get_users(self):",
-          "purpose": "",
-          "range": [
-            26,
-            32
-          ]
-        },
-        {
-          "prototype": "def find_user_by_id(self, user_id):",
-          "purpose": "",
-          "range": [
-            34,
-            46
-          ]
-        },
-        {
-          "prototype": "def __init__(self, user_id, name, email):",
-          "purpose": "",
-          "range": [
-            51,
-            61
-          ]
-        },
-        {
-          "prototype": "def get_info(self):",
-          "purpose": "",
-          "range": [
-            63,
-            69
-          ]
-        },
         {
           "prototype": "def create_user(user_id, name, email):",
           "purpose": "",
