@@ -5,9 +5,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/cnwinds/CodeCartographer/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cnwinds/CodeCartographer/internal/models"
 )
 
 func TestLoadLanguagesConfig(t *testing.T) {

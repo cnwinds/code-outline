@@ -50,7 +50,7 @@ func (s *Scanner) ScanProject(projectPath string) (files map[string]models.FileI
 	}()
 
 	// 遍历项目文件
-	err := s.walkProjectFiles(projectPath, files, &techStack, &mu, &wg, errorChan)
+	err = s.walkProjectFiles(projectPath, files, &techStack, &mu, &wg, errorChan)
 
 	// 等待所有goroutine完成
 	wg.Wait()

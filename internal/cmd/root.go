@@ -9,12 +9,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/cnwinds/CodeCartographer/internal/config"
 	"github.com/cnwinds/CodeCartographer/internal/models"
 	"github.com/cnwinds/CodeCartographer/internal/parser"
 	"github.com/cnwinds/CodeCartographer/internal/scanner"
 	"github.com/cnwinds/CodeCartographer/internal/updater"
-	"github.com/spf13/cobra"
 )
 
 var (
