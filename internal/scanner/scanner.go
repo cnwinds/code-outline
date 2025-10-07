@@ -41,7 +41,9 @@ func (s *Scanner) ScanProject(projectPath string) (files map[string]models.FileI
 	var errorsMu sync.Mutex
 
 	// 启动错误收集goroutine
+	errorCollectorDone := make(chan struct{})
 	go func() {
+		defer close(errorCollectorDone)
 		for err := range errorChan {
 			errorsMu.Lock()
 			scanErrors = append(scanErrors, err)
@@ -55,6 +57,9 @@ func (s *Scanner) ScanProject(projectPath string) (files map[string]models.FileI
 	// 等待所有goroutine完成
 	wg.Wait()
 	close(errorChan)
+
+	// 等待错误收集goroutine完成
+	<-errorCollectorDone
 
 	if err != nil {
 		return nil, nil, fmt.Errorf("扫描项目失败: %w", err)
