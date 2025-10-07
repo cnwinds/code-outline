@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -72,7 +73,19 @@ func init() {
 }
 
 // Execute 执行根命令
-func Execute() error {
+func Execute(version string) error {
+	// 添加版本命令
+	versionCmd := &cobra.Command{
+		Use:   "version",
+		Short: "显示版本信息",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("CodeCartographer %s\n", version)
+			fmt.Printf("Go版本: %s\n", runtime.Version())
+			fmt.Printf("操作系统: %s/%s\n", runtime.GOOS, runtime.GOARCH)
+		},
+	}
+	rootCmd.AddCommand(versionCmd)
+
 	return rootCmd.Execute()
 }
 
@@ -84,7 +97,7 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 	fmt.Println("📋 加载语言配置...")
 	languagesConfig, err := config.LoadLanguagesConfig(configPath)
 	if err != nil {
-		return fmt.Errorf("加载语言配置失败: %v", err)
+		return fmt.Errorf("加载语言配置失败: %w", err)
 	}
 	fmt.Printf("✅ 已加载 %d 种语言的配置\n", len(languagesConfig))
 
@@ -119,7 +132,7 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 	fileScanner := scanner.NewScanner(codeParser, excludePatterns)
 	files, techStack, err := fileScanner.ScanProject(projectPath)
 	if err != nil {
-		return fmt.Errorf("扫描项目失败: %v", err)
+		return fmt.Errorf("扫描项目失败: %w", err)
 	}
 	fmt.Printf("✅ 扫描完成，找到 %d 个文件\n", len(files))
 
@@ -150,7 +163,7 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 	fmt.Printf("💾 生成输出文件: %s\n", outputPath)
 	err = saveProjectContext(&context, outputPath)
 	if err != nil {
-		return fmt.Errorf("保存项目上下文失败: %v", err)
+		return fmt.Errorf("保存项目上下文失败: %w", err)
 	}
 
 	// 7. 显示统计信息
@@ -210,7 +223,7 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 	// 1. 加载语言配置
 	languagesConfig, err := config.LoadLanguagesConfig(configPath)
 	if err != nil {
-		return fmt.Errorf("加载语言配置失败: %v", err)
+		return fmt.Errorf("加载语言配置失败: %w", err)
 	}
 
 	// 2. 创建解析器
@@ -244,7 +257,7 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 	// 5. 执行增量更新
 	updatedContext, changes, err := incrementalUpdater.UpdateProject(outputPath, projectPath, excludePatterns)
 	if err != nil {
-		return fmt.Errorf("增量更新失败: %v", err)
+		return fmt.Errorf("增量更新失败: %w", err)
 	}
 
 	// 6. 如果有变更，保存更新后的上下文
@@ -252,7 +265,7 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		fmt.Printf("\n📝 应用了 %d 个文件变更\n", len(changes))
 
 		if err := saveProjectContext(updatedContext, outputPath); err != nil {
-			return fmt.Errorf("保存更新后的上下文失败: %v", err)
+			return fmt.Errorf("保存更新后的上下文失败: %w", err)
 		}
 
 		fmt.Printf("💾 更新文件: %s\n", outputPath)

@@ -39,19 +39,19 @@ func (p *SimpleParser) ParseFile(filePath string) (*models.FileInfo, error) {
 	// 获取文件信息
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("获取文件信息失败: %v", err)
+		return nil, fmt.Errorf("获取文件信息失败: %w", err)
 	}
 
 	// 读取文件内容
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("读取文件失败: %v", err)
+		return nil, fmt.Errorf("读取文件失败: %w", err)
 	}
 
 	// 根据语言类型解析符号
 	symbols, err := p.parseSymbolsByLanguage(string(content), langName)
 	if err != nil {
-		return nil, fmt.Errorf("解析符号失败: %v", err)
+		return nil, fmt.Errorf("解析符号失败: %w", err)
 	}
 
 	return &models.FileInfo{

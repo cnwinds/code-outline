@@ -86,7 +86,7 @@ func (s *Scanner) ScanProject(projectPath string) (map[string]models.FileInfo, [
 
 			fileInfo, err := s.parser.ParseFile(filePath)
 			if err != nil {
-				errorChan <- fmt.Errorf("解析文件 %s 失败: %v", relativePath, err)
+				errorChan <- fmt.Errorf("解析文件 %s 失败: %w", relativePath, err)
 				return
 			}
 
@@ -110,7 +110,7 @@ func (s *Scanner) ScanProject(projectPath string) (map[string]models.FileInfo, [
 	close(errorChan)
 
 	if err != nil {
-		return nil, nil, fmt.Errorf("扫描项目失败: %v", err)
+		return nil, nil, fmt.Errorf("扫描项目失败: %w", err)
 	}
 
 	// 如果有扫描错误，记录但不中断

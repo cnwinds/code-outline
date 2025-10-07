@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -32,14 +31,14 @@ func LoadLanguagesConfig(configPath string) (models.LanguagesConfig, error) {
 	}
 
 	// 读取配置文件
-	data, err := ioutil.ReadFile(configPath)
+	data, err := os.ReadFile(configPath)
 	if err != nil {
-		return nil, fmt.Errorf("读取配置文件失败: %v", err)
+		return nil, fmt.Errorf("读取配置文件失败: %w", err)
 	}
 
 	var config models.LanguagesConfig
 	if err := json.Unmarshal(data, &config); err != nil {
-		return nil, fmt.Errorf("解析配置文件失败: %v", err)
+		return nil, fmt.Errorf("解析配置文件失败: %w", err)
 	}
 
 	return config, nil
@@ -93,17 +92,17 @@ func createDefaultLanguagesConfig(configPath string) (models.LanguagesConfig, er
 
 	// 创建配置文件目录
 	if err := os.MkdirAll(filepath.Dir(configPath), 0755); err != nil {
-		return nil, fmt.Errorf("创建配置目录失败: %v", err)
+		return nil, fmt.Errorf("创建配置目录失败: %w", err)
 	}
 
 	// 写入默认配置文件
 	data, err := json.MarshalIndent(defaultConfig, "", "  ")
 	if err != nil {
-		return nil, fmt.Errorf("序列化默认配置失败: %v", err)
+		return nil, fmt.Errorf("序列化默认配置失败: %w", err)
 	}
 
-	if err := ioutil.WriteFile(configPath, data, 0644); err != nil {
-		return nil, fmt.Errorf("写入配置文件失败: %v", err)
+	if err := os.WriteFile(configPath, data, 0644); err != nil {
+		return nil, fmt.Errorf("写入配置文件失败: %w", err)
 	}
 
 	fmt.Printf("已创建默认配置文件: %s\n", configPath)

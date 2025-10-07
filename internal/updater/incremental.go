@@ -46,13 +46,13 @@ func (u *IncrementalUpdater) UpdateProject(contextPath, projectPath string, excl
 	// 1. 加载现有的项目上下文
 	existingContext, err := u.loadExistingContext(contextPath)
 	if err != nil {
-		return nil, nil, fmt.Errorf("加载现有上下文失败: %v", err)
+		return nil, nil, fmt.Errorf("加载现有上下文失败: %w", err)
 	}
 
 	// 2. 扫描项目文件，检测变更
 	changes, err := u.detectFileChanges(existingContext, projectPath, excludePatterns)
 	if err != nil {
-		return nil, nil, fmt.Errorf("检测文件变更失败: %v", err)
+		return nil, nil, fmt.Errorf("检测文件变更失败: %w", err)
 	}
 
 	// 3. 如果没有变更，直接返回
@@ -64,7 +64,7 @@ func (u *IncrementalUpdater) UpdateProject(contextPath, projectPath string, excl
 	// 4. 应用变更
 	updatedContext, err := u.applyChanges(existingContext, changes)
 	if err != nil {
-		return nil, nil, fmt.Errorf("应用变更失败: %v", err)
+		return nil, nil, fmt.Errorf("应用变更失败: %w", err)
 	}
 
 	// 5. 更新时间戳
@@ -81,12 +81,12 @@ func (u *IncrementalUpdater) loadExistingContext(contextPath string) (*models.Pr
 
 	data, err := os.ReadFile(contextPath)
 	if err != nil {
-		return nil, fmt.Errorf("读取上下文文件失败: %v", err)
+		return nil, fmt.Errorf("读取上下文文件失败: %w", err)
 	}
 
 	var context models.ProjectContext
 	if err := json.Unmarshal(data, &context); err != nil {
-		return nil, fmt.Errorf("解析上下文文件失败: %v", err)
+		return nil, fmt.Errorf("解析上下文文件失败: %w", err)
 	}
 
 	return &context, nil
