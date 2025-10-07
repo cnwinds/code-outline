@@ -564,7 +564,19 @@ CodeCartographer 生成的上下文文件可以作为：
 ### 常见问题
 
 **Q: Tree-sitter 解析器无法使用？**
-A: 请确保已安装 C 编译器。Windows 用户请参考 [Windows CGO 环境安装文档](docs/WINDOWS_CGO_SETUP.md)。如果仍有问题，可使用 `--treesitter=false` 参数回退到简单解析器。
+A: 请确保已安装 C 编译器。Windows 用户请参考 [Windows CGO 环境安装文档](docs/WINDOWS_CGO_SETUP.md)。如果仍有问题，可以使用 Docker 构建方式。
+
+**Q: Windows 下编译时出现链接器错误（如 "cannot find -lmingwex"）？**
+A: 这通常是因为 Go 使用了 32 位架构。解决方法：
+```bash
+# 设置 64 位架构
+$env:GOARCH="amd64"
+$env:CGO_ENABLED=1
+$env:CC="gcc"
+
+# 然后重新构建
+go build -o build/contextgen.exe ./cmd/contextgen
+```
 
 **Q: 扫描大项目时内存占用过高？**
 A: 这是已知问题，建议使用 `--exclude` 参数排除不必要的目录，如 `node_modules`、`vendor` 等。
