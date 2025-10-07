@@ -196,15 +196,210 @@ func (p *TreeSitterParser) extractSymbols(node *sitter.Node, content []byte, lan
 func (p *TreeSitterParser) nodeToSymbol(node *sitter.Node, content []byte) models.Symbol {
 	start := node.StartPoint()
 	end := node.EndPoint()
+	nodeType := node.Type()
 
 	// 提取函数原型（不包括函数体）
 	prototype := p.extractPrototype(node, content)
 
-	return models.Symbol{
+	symbol := models.Symbol{
 		Prototype: prototype,
 		Purpose:   "", // TODO: 从注释提取
 		Range:     []int{int(start.Row) + 1, int(end.Row) + 1},
 	}
+
+	// 如果是类节点，提取类内部的方法
+	if nodeType == "class_declaration" || nodeType == "class_definition" {
+		symbol.Methods = p.extractClassMethods(node, content)
+	}
+
+	return symbol
+}
+
+// extractClassMethods 提取类内部的方法
+func (p *TreeSitterParser) extractClassMethods(classNode *sitter.Node, content []byte) []models.Symbol {
+	var methods []models.Symbol
+	
+	// 首先提取类名
+	className := p.extractClassName(classNode, content)
+	
+	// 遍历类的子节点，查找方法
+	childCount := int(classNode.ChildCount())
+	for i := 0; i < childCount; i++ {
+		child := classNode.Child(i)
+		if child == nil {
+			continue
+		}
+		
+		childType := child.Type()
+		
+		// 对于 JavaScript，方法在 class_body 中
+		if childType == "class_body" {
+			// 遍历 class_body 的子节点查找方法
+			bodyChildCount := int(child.ChildCount())
+			for j := 0; j < bodyChildCount; j++ {
+				bodyChild := child.Child(j)
+				if bodyChild == nil {
+					continue
+				}
+				
+				bodyChildType := bodyChild.Type()
+				if bodyChildType == "method_definition" {
+					// 提取方法原型
+					methodPrototype := p.extractPrototype(bodyChild, content)
+					// 在方法名前面加上类名
+					methodPrototype = p.addClassNameToMethod(className, methodPrototype)
+					
+					start := bodyChild.StartPoint()
+					end := bodyChild.EndPoint()
+					
+					method := models.Symbol{
+						Prototype: methodPrototype,
+						Purpose:   "",
+						Range:     []int{int(start.Row) + 1, int(end.Row) + 1},
+					}
+					
+					methods = append(methods, method)
+				}
+			}
+		}
+		
+		// 对于 Python，方法直接在类节点下
+		if childType == "function_definition" {
+			// 提取方法原型
+			methodPrototype := p.extractPrototype(child, content)
+			// 在方法名前面加上类名
+			methodPrototype = p.addClassNameToMethod(className, methodPrototype)
+			
+			start := child.StartPoint()
+			end := child.EndPoint()
+			
+			method := models.Symbol{
+				Prototype: methodPrototype,
+				Purpose:   "",
+				Range:     []int{int(start.Row) + 1, int(end.Row) + 1},
+			}
+			
+			methods = append(methods, method)
+		}
+		
+		// 对于 Python，也可能在 block 子节点中
+		if childType == "block" {
+			// 遍历 block 的子节点查找方法
+			blockChildCount := int(child.ChildCount())
+			for k := 0; k < blockChildCount; k++ {
+				blockChild := child.Child(k)
+				if blockChild == nil {
+					continue
+				}
+				
+				blockChildType := blockChild.Type()
+				if blockChildType == "function_definition" {
+					// 提取方法原型
+					methodPrototype := p.extractPrototype(blockChild, content)
+					// 在方法名前面加上类名
+					methodPrototype = p.addClassNameToMethod(className, methodPrototype)
+					
+					start := blockChild.StartPoint()
+					end := blockChild.EndPoint()
+					
+					method := models.Symbol{
+						Prototype: methodPrototype,
+						Purpose:   "",
+						Range:     []int{int(start.Row) + 1, int(end.Row) + 1},
+					}
+					
+					methods = append(methods, method)
+				}
+			}
+		}
+	}
+	
+	return methods
+}
+
+// extractClassName 提取类名
+func (p *TreeSitterParser) extractClassName(classNode *sitter.Node, content []byte) string {
+	// 遍历类的子节点，查找类名
+	childCount := int(classNode.ChildCount())
+	for i := 0; i < childCount; i++ {
+		child := classNode.Child(i)
+		if child == nil {
+			continue
+		}
+		
+		childType := child.Type()
+		
+		// JavaScript: identifier (类名)
+		// Python: identifier (类名)
+		if childType == "identifier" {
+			className := string(content[child.StartByte():child.EndByte()])
+			return className
+		}
+	}
+	
+	return "Unknown"
+}
+
+// addClassNameToMethod 在方法名前面加上类名
+func (p *TreeSitterParser) addClassNameToMethod(className, methodPrototype string) string {
+	if className == "Unknown" {
+		return methodPrototype
+	}
+	
+	// 对于不同的语言，使用不同的格式
+	// JavaScript: ClassName.methodName()
+	// Python: ClassName.methodName()
+	
+	// 查找方法名的开始位置
+	// 对于 JavaScript: methodName() 或 methodName(params)
+	// 对于 Python: def methodName() 或 def methodName(params)
+	
+	lines := strings.Split(methodPrototype, "\n")
+	if len(lines) == 0 {
+		return methodPrototype
+	}
+	
+	// 处理第一行（通常包含方法名）
+	firstLine := lines[0]
+	
+	// JavaScript: 直接是方法名
+	if strings.Contains(firstLine, "(") && !strings.Contains(firstLine, "def ") {
+		// 找到方法名
+		parenIndex := strings.Index(firstLine, "(")
+		if parenIndex > 0 {
+			methodName := strings.TrimSpace(firstLine[:parenIndex])
+			// 替换方法名
+			newFirstLine := strings.Replace(firstLine, methodName, className+"."+methodName, 1)
+			lines[0] = newFirstLine
+		}
+	}
+	
+	// Python: def methodName
+	if strings.HasPrefix(firstLine, "def ") {
+		// 找到 def 后面的方法名
+		defIndex := strings.Index(firstLine, "def ")
+		if defIndex >= 0 {
+			afterDef := firstLine[defIndex+4:]
+			// 找到方法名（到空格或冒号为止）
+			spaceIndex := strings.Index(afterDef, " ")
+			colonIndex := strings.Index(afterDef, ":")
+			
+			var methodName string
+			if spaceIndex > 0 && (colonIndex == -1 || spaceIndex < colonIndex) {
+				methodName = strings.TrimSpace(afterDef[:spaceIndex])
+			} else if colonIndex > 0 {
+				methodName = strings.TrimSpace(afterDef[:colonIndex])
+			} else {
+				methodName = strings.TrimSpace(afterDef)
+			}
+			
+			// 替换方法名
+			newFirstLine := strings.Replace(firstLine, "def "+methodName, "def "+className+"."+methodName, 1)
+			lines[0] = newFirstLine
+		}
+	}
+	
+	return strings.Join(lines, "\n")
 }
 
 // extractPrototype 提取函数原型（不包括函数体）
