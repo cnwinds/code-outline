@@ -608,18 +608,53 @@ func (p *TreeSitterParser) extractPurpose(node *sitter.Node, content []byte) str
 			}
 			
 			childType := child.Type()
-			if childType == "expression_statement" {
+			
+			// Python docstring 可能是多种节点类型
+			if childType == "expression_statement" || childType == "string" || childType == "block" {
 				// 检查是否是字符串字面量（docstring）
 				childText := string(content[child.StartByte():child.EndByte()])
 				childText = strings.TrimSpace(childText)
 				
-				// Python docstring
-				if strings.HasPrefix(childText, "\"\"\"") && strings.HasSuffix(childText, "\"\"\"") {
+				// Python docstring: """...""" 或 '''...'''
+				if (strings.HasPrefix(childText, "\"\"\"") && strings.HasSuffix(childText, "\"\"\"")) ||
+				   (strings.HasPrefix(childText, "'''") && strings.HasSuffix(childText, "'''")) {
 					docstring := strings.TrimPrefix(childText, "\"\"\"")
 					docstring = strings.TrimSuffix(docstring, "\"\"\"")
+					docstring = strings.TrimPrefix(docstring, "'''")
+					docstring = strings.TrimSuffix(docstring, "'''")
 					docstring = strings.TrimSpace(docstring)
 					if docstring != "" {
 						return docstring
+					}
+				}
+				
+				// 如果是 block，检查其子节点
+				if childType == "block" {
+					blockChildCount := int(child.ChildCount())
+					for j := 0; j < blockChildCount; j++ {
+						blockChild := child.Child(j)
+						if blockChild == nil {
+							continue
+						}
+						
+						blockChildType := blockChild.Type()
+						if blockChildType == "expression_statement" || blockChildType == "string" {
+							blockChildText := string(content[blockChild.StartByte():blockChild.EndByte()])
+							blockChildText = strings.TrimSpace(blockChildText)
+							
+							// 检查是否是 docstring
+							if (strings.HasPrefix(blockChildText, "\"\"\"") && strings.HasSuffix(blockChildText, "\"\"\"")) ||
+							   (strings.HasPrefix(blockChildText, "'''") && strings.HasSuffix(blockChildText, "'''")) {
+								docstring := strings.TrimPrefix(blockChildText, "\"\"\"")
+								docstring = strings.TrimSuffix(docstring, "\"\"\"")
+								docstring = strings.TrimPrefix(docstring, "'''")
+								docstring = strings.TrimSuffix(docstring, "'''")
+								docstring = strings.TrimSpace(docstring)
+								if docstring != "" {
+									return docstring
+								}
+							}
+						}
 					}
 				}
 			}
