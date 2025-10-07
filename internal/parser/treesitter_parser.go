@@ -417,45 +417,87 @@ func (p *TreeSitterParser) addClassNameToMethod(className, methodPrototype strin
 func (p *TreeSitterParser) extractPrototype(node *sitter.Node, content []byte) string {
 	nodeType := node.Type()
 
-	// 对于 class 节点，只提取类声明部分（类名和可能的继承）
+	// 处理类声明
+	if prototype := p.extractClassPrototype(node, content, nodeType); prototype != "" {
+		return prototype
+	}
+
+	// 处理函数体排除
+	if prototype := p.extractFunctionPrototype(node, content); prototype != "" {
+		return prototype
+	}
+
+	// 处理 Python 函数定义
+	if prototype := p.extractPythonFunctionPrototype(node, content, nodeType); prototype != "" {
+		return prototype
+	}
+
+	// 默认返回整个节点
+	return p.extractFullNode(node, content)
+}
+
+// extractClassPrototype 提取类原型
+func (p *TreeSitterParser) extractClassPrototype(node *sitter.Node, content []byte, nodeType string) string {
+	// 对于 JavaScript class_declaration
 	if nodeType == "class_declaration" {
-		// 查找 class_body 子节点
-		childCount := int(node.ChildCount())
-		for i := 0; i < childCount; i++ {
-			child := node.Child(i)
-			if child == nil {
-				continue
-			}
-
-			if child.Type() == "class_body" {
-				// 提取到 class_body 之前的内容
-				prototype := string(content[node.StartByte():child.StartByte()])
-				return strings.TrimSpace(prototype)
-			}
-		}
+		return p.extractJavaScriptClassPrototype(node, content)
 	}
 
-	// 对于 Python 的 class_definition，查找冒号
+	// 对于 Python class_definition
 	if nodeType == nodeClassDefinition {
-		fullText := string(content[node.StartByte():node.EndByte()])
-		lines := strings.Split(fullText, "\n")
-		for i, line := range lines {
-			if strings.Contains(line, ":") && !strings.Contains(line, "::") {
-				// 找到第一个冒号，返回包含冒号的部分
-				idx := strings.Index(line, ":")
-				if i == 0 {
-					return strings.TrimSpace(line[:idx+1])
-				}
-				result := strings.Join(lines[:i], "\n") + "\n" + line[:idx+1]
-				return strings.TrimSpace(result)
-			}
-		}
+		return p.extractPythonClassPrototype(node, content)
 	}
 
-	// 通过遍历子节点找到函数体（block/body）并排除它
-	var declarationEnd uint32
-	hasBody := false
+	return ""
+}
 
+// extractJavaScriptClassPrototype 提取 JavaScript 类原型
+func (p *TreeSitterParser) extractJavaScriptClassPrototype(node *sitter.Node, content []byte) string {
+	childCount := int(node.ChildCount())
+	for i := 0; i < childCount; i++ {
+		child := node.Child(i)
+		if child == nil {
+			continue
+		}
+
+		if child.Type() == "class_body" {
+			prototype := string(content[node.StartByte():child.StartByte()])
+			return strings.TrimSpace(prototype)
+		}
+	}
+	return ""
+}
+
+// extractPythonClassPrototype 提取 Python 类原型
+func (p *TreeSitterParser) extractPythonClassPrototype(node *sitter.Node, content []byte) string {
+	fullText := string(content[node.StartByte():node.EndByte()])
+	lines := strings.Split(fullText, "\n")
+
+	for i, line := range lines {
+		if strings.Contains(line, ":") && !strings.Contains(line, "::") {
+			idx := strings.Index(line, ":")
+			if i == 0 {
+				return strings.TrimSpace(line[:idx+1])
+			}
+			result := strings.Join(lines[:i], "\n") + "\n" + line[:idx+1]
+			return strings.TrimSpace(result)
+		}
+	}
+	return ""
+}
+
+// extractFunctionPrototype 提取函数原型（排除函数体）
+func (p *TreeSitterParser) extractFunctionPrototype(node *sitter.Node, content []byte) string {
+	declarationEnd := p.findFunctionBodyEnd(node)
+	if declarationEnd > node.StartByte() {
+		prototype := string(content[node.StartByte():declarationEnd])
+		return strings.TrimSpace(prototype)
+	}
+	return ""
+}
+
+// findFunctionBodyEnd 查找函数体结束位置
+func (p *TreeSitterParser) findFunctionBodyEnd(node *sitter.Node) uint32 {
 	childCount := int(node.ChildCount())
 	for i := 0; i < childCount; i++ {
 		child := node.Child(i)
@@ -464,43 +506,43 @@ func (p *TreeSitterParser) extractPrototype(node *sitter.Node, content []byte) s
 		}
 
 		childType := child.Type()
-
-		// Go: block
-		// JavaScript/TypeScript: statement_block
-		// Python: block
-		if childType == nodeBlock || childType == "statement_block" ||
-			childType == "body" || childType == "function_body" {
-			// 找到函数体，记录其起始位置
-			declarationEnd = child.StartByte()
-			hasBody = true
-			break
+		if p.isFunctionBodyNode(childType) {
+			return child.StartByte()
 		}
 	}
+	return 0
+}
 
-	if hasBody && declarationEnd > node.StartByte() {
-		// 提取从节点开始到函数体之前的内容
-		prototype := string(content[node.StartByte():declarationEnd])
-		return strings.TrimSpace(prototype)
+// isFunctionBodyNode 检查是否是函数体节点
+func (p *TreeSitterParser) isFunctionBodyNode(nodeType string) bool {
+	return nodeType == nodeBlock || nodeType == "statement_block" ||
+		nodeType == "body" || nodeType == "function_body"
+}
+
+// extractPythonFunctionPrototype 提取 Python 函数原型
+func (p *TreeSitterParser) extractPythonFunctionPrototype(node *sitter.Node, content []byte, nodeType string) string {
+	if nodeType != nodeFunctionDefinition {
+		return ""
 	}
 
-	// 对于 Python 的函数定义，查找冒号
-	if nodeType == nodeFunctionDefinition {
-		fullText := string(content[node.StartByte():node.EndByte()])
-		lines := strings.Split(fullText, "\n")
-		for i, line := range lines {
-			if strings.Contains(line, ":") && !strings.Contains(line, "::") {
-				// 找到第一个冒号，返回包含冒号的部分
-				idx := strings.Index(line, ":")
-				if i == 0 {
-					return strings.TrimSpace(line[:idx+1])
-				}
-				result := strings.Join(lines[:i], "\n") + "\n" + line[:idx+1]
-				return strings.TrimSpace(result)
+	fullText := string(content[node.StartByte():node.EndByte()])
+	lines := strings.Split(fullText, "\n")
+
+	for i, line := range lines {
+		if strings.Contains(line, ":") && !strings.Contains(line, "::") {
+			idx := strings.Index(line, ":")
+			if i == 0 {
+				return strings.TrimSpace(line[:idx+1])
 			}
+			result := strings.Join(lines[:i], "\n") + "\n" + line[:idx+1]
+			return strings.TrimSpace(result)
 		}
 	}
+	return ""
+}
 
-	// 如果没有找到函数体（可能是接口方法声明、类型定义等），返回整个节点
+// extractFullNode 提取完整节点内容
+func (p *TreeSitterParser) extractFullNode(node *sitter.Node, content []byte) string {
 	fullText := string(content[node.StartByte():node.EndByte()])
 	return strings.TrimSpace(fullText)
 }
@@ -539,115 +581,167 @@ func (p *TreeSitterParser) extractFilePurpose(content []byte) string {
 
 // extractPurpose 提取符号的注释/说明
 func (p *TreeSitterParser) extractPurpose(node *sitter.Node, content []byte) string {
-	// 获取节点开始位置
+	// 首先检查节点前的注释
+	if purpose := p.extractPrecedingComments(node, content); purpose != "" {
+		return purpose
+	}
+
+	// 然后检查节点内部的注释（对于类和方法）
+	return p.extractInternalComments(node, content)
+}
+
+// extractPrecedingComments 提取节点前的注释
+func (p *TreeSitterParser) extractPrecedingComments(node *sitter.Node, content []byte) string {
 	startPoint := node.StartPoint()
 	startRow := int(startPoint.Row)
-
-	// 将内容按行分割
 	lines := strings.Split(string(content), "\n")
 
-	// 检查节点前的注释
 	for i := startRow - 1; i >= 0; i-- {
 		if i >= len(lines) {
 			continue
 		}
 
 		line := strings.TrimSpace(lines[i])
-
-		// 跳过空行
 		if line == "" {
 			continue
 		}
 
-		// Python: """docstring""" 或 # 注释
-		if strings.HasPrefix(line, "\"\"\"") {
-			// 提取 docstring
-			docstring := strings.TrimPrefix(line, "\"\"\"")
-			docstring = strings.TrimSuffix(docstring, "\"\"\"")
-			docstring = strings.TrimSpace(docstring)
-			if docstring != "" {
-				return docstring
-			}
+		// 检查 Python docstring
+		if purpose := p.extractDocstringFromLine(line); purpose != "" {
+			return purpose
 		}
 
-		// 单行注释: #, //, /*
-		if strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") || strings.HasPrefix(line, "/*") {
-			comment := strings.TrimSpace(strings.TrimPrefix(line, "#"))
-			comment = strings.TrimSpace(strings.TrimPrefix(comment, "//"))
-			comment = strings.TrimSpace(strings.TrimPrefix(comment, "/*"))
-			comment = strings.TrimSpace(strings.TrimSuffix(comment, "*/"))
-			if comment != "" {
-				return comment
-			}
+		// 检查单行注释
+		if purpose := p.extractCommentFromLine(line); purpose != "" {
+			return purpose
 		}
 
 		// 如果遇到非注释行，停止查找
-		if !strings.HasPrefix(line, "#") && !strings.HasPrefix(line, "//") && !strings.HasPrefix(line, "/*") && line != "" {
+		if !p.isCommentLine(line) && line != "" {
 			break
 		}
 	}
 
-	// 检查节点内部的注释（对于类和方法）
+	return ""
+}
+
+// extractInternalComments 提取节点内部的注释
+func (p *TreeSitterParser) extractInternalComments(node *sitter.Node, content []byte) string {
 	nodeType := node.Type()
-	if nodeType == "class_definition" || nodeType == "function_definition" || nodeType == "method_definition" {
-		// 查找节点内部的第一个注释
-		childCount := int(node.ChildCount())
-		for i := 0; i < childCount; i++ {
-			child := node.Child(i)
-			if child == nil {
-				continue
-			}
+	if !p.isCommentableNode(nodeType) {
+		return ""
+	}
 
-			childType := child.Type()
+	childCount := int(node.ChildCount())
+	for i := 0; i < childCount; i++ {
+		child := node.Child(i)
+		if child == nil {
+			continue
+		}
 
-			// Python docstring 可能是多种节点类型
-			if childType == nodeExpressionStatement || childType == nodeString || childType == nodeBlock {
-				// 检查是否是字符串字面量（docstring）
-				childText := string(content[child.StartByte():child.EndByte()])
-				childText = strings.TrimSpace(childText)
+		if purpose := p.extractCommentFromChild(child, content); purpose != "" {
+			return purpose
+		}
+	}
 
-				// Python docstring: """...""" 或 '''...'''
-				if (strings.HasPrefix(childText, "\"\"\"") && strings.HasSuffix(childText, "\"\"\"")) ||
-					(strings.HasPrefix(childText, "'''") && strings.HasSuffix(childText, "'''")) {
-					docstring := strings.TrimPrefix(childText, "\"\"\"")
-					docstring = strings.TrimSuffix(docstring, "\"\"\"")
-					docstring = strings.TrimPrefix(docstring, "'''")
-					docstring = strings.TrimSuffix(docstring, "'''")
-					docstring = strings.TrimSpace(docstring)
-					if docstring != "" {
-						return docstring
-					}
-				}
+	return ""
+}
 
-				// 如果是 block，检查其子节点
-				if childType == "block" {
-					blockChildCount := int(child.ChildCount())
-					for j := 0; j < blockChildCount; j++ {
-						blockChild := child.Child(j)
-						if blockChild == nil {
-							continue
-						}
+// extractDocstringFromLine 从行中提取 docstring
+func (p *TreeSitterParser) extractDocstringFromLine(line string) string {
+	if strings.HasPrefix(line, "\"\"\"") {
+		docstring := strings.TrimPrefix(line, "\"\"\"")
+		docstring = strings.TrimSuffix(docstring, "\"\"\"")
+		docstring = strings.TrimSpace(docstring)
+		if docstring != "" {
+			return docstring
+		}
+	}
+	return ""
+}
 
-						blockChildType := blockChild.Type()
-						if blockChildType == nodeExpressionStatement || blockChildType == nodeString {
-							blockChildText := string(content[blockChild.StartByte():blockChild.EndByte()])
-							blockChildText = strings.TrimSpace(blockChildText)
+// extractCommentFromLine 从行中提取注释
+func (p *TreeSitterParser) extractCommentFromLine(line string) string {
+	if strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") || strings.HasPrefix(line, "/*") {
+		comment := strings.TrimSpace(strings.TrimPrefix(line, "#"))
+		comment = strings.TrimSpace(strings.TrimPrefix(comment, "//"))
+		comment = strings.TrimSpace(strings.TrimPrefix(comment, "/*"))
+		comment = strings.TrimSpace(strings.TrimSuffix(comment, "*/"))
+		if comment != "" {
+			return comment
+		}
+	}
+	return ""
+}
 
-							// 检查是否是 docstring
-							if (strings.HasPrefix(blockChildText, "\"\"\"") && strings.HasSuffix(blockChildText, "\"\"\"")) ||
-								(strings.HasPrefix(blockChildText, "'''") && strings.HasSuffix(blockChildText, "'''")) {
-								docstring := strings.TrimPrefix(blockChildText, "\"\"\"")
-								docstring = strings.TrimSuffix(docstring, "\"\"\"")
-								docstring = strings.TrimPrefix(docstring, "'''")
-								docstring = strings.TrimSuffix(docstring, "'''")
-								docstring = strings.TrimSpace(docstring)
-								if docstring != "" {
-									return docstring
-								}
-							}
-						}
-					}
-				}
+// isCommentLine 检查是否是注释行
+func (p *TreeSitterParser) isCommentLine(line string) bool {
+	return strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") || strings.HasPrefix(line, "/*")
+}
+
+// isCommentableNode 检查是否是可注释的节点类型
+func (p *TreeSitterParser) isCommentableNode(nodeType string) bool {
+	return nodeType == nodeClassDefinition || nodeType == nodeFunctionDefinition || nodeType == nodeMethodDefinition
+}
+
+// extractCommentFromChild 从子节点中提取注释
+func (p *TreeSitterParser) extractCommentFromChild(child *sitter.Node, content []byte) string {
+	childType := child.Type()
+
+	// 检查是否是 docstring 节点
+	if p.isDocstringNode(childType) {
+		if purpose := p.extractDocstringFromNode(child, content); purpose != "" {
+			return purpose
+		}
+	}
+
+	// 如果是 block，检查其子节点
+	if childType == nodeBlock {
+		return p.extractCommentFromBlock(child, content)
+	}
+
+	return ""
+}
+
+// isDocstringNode 检查是否是 docstring 节点
+func (p *TreeSitterParser) isDocstringNode(nodeType string) bool {
+	return nodeType == nodeExpressionStatement || nodeType == nodeString || nodeType == nodeBlock
+}
+
+// extractDocstringFromNode 从节点中提取 docstring
+func (p *TreeSitterParser) extractDocstringFromNode(node *sitter.Node, content []byte) string {
+	childText := string(content[node.StartByte():node.EndByte()])
+	childText = strings.TrimSpace(childText)
+
+	// 检查 Python docstring: """...""" 或 '''...'''
+	if (strings.HasPrefix(childText, "\"\"\"") && strings.HasSuffix(childText, "\"\"\"")) ||
+		(strings.HasPrefix(childText, "'''") && strings.HasSuffix(childText, "'''")) {
+		docstring := strings.TrimPrefix(childText, "\"\"\"")
+		docstring = strings.TrimSuffix(docstring, "\"\"\"")
+		docstring = strings.TrimPrefix(docstring, "'''")
+		docstring = strings.TrimSuffix(docstring, "'''")
+		docstring = strings.TrimSpace(docstring)
+		if docstring != "" {
+			return docstring
+		}
+	}
+
+	return ""
+}
+
+// extractCommentFromBlock 从 block 节点中提取注释
+func (p *TreeSitterParser) extractCommentFromBlock(blockNode *sitter.Node, content []byte) string {
+	blockChildCount := int(blockNode.ChildCount())
+	for j := 0; j < blockChildCount; j++ {
+		blockChild := blockNode.Child(j)
+		if blockChild == nil {
+			continue
+		}
+
+		blockChildType := blockChild.Type()
+		if blockChildType == nodeExpressionStatement || blockChildType == nodeString {
+			if purpose := p.extractDocstringFromNode(blockChild, content); purpose != "" {
+				return purpose
 			}
 		}
 	}
