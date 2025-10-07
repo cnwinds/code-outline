@@ -25,11 +25,11 @@
 git clone https://github.com/yourusername/CodeCartographer.git
 cd CodeCartographer
 
-# 构建项目（启用 Tree-sitter）
+# 构建项目（自动检测平台）
 make build
 
-# 构建简单版本（无 Tree-sitter，无需 C 编译器）
-make build-simple
+# Windows 专用构建（64 位架构）
+make build-windows
 
 # 或者直接运行
 make run
@@ -433,11 +433,11 @@ CodeCartographer/
 ### 构建命令
 
 ```bash
-# 构建项目（启用 Tree-sitter）
+# 构建项目（自动检测平台）
 make build
 
-# 构建简单版本（无 Tree-sitter）
-make build-simple
+# Windows 专用构建（64 位架构）
+make build-windows
 
 # 跨平台构建
 make build-all

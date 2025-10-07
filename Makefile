@@ -16,7 +16,12 @@ all: clean build
 build:
 	@echo "🔨 构建 CodeCartographer..."
 	@mkdir -p ${BUILD_DIR}
-	CGO_ENABLED=1 go build ${LDFLAGS} -o ${BUILD_DIR}/${BINARY_NAME} ${MAIN_PATH}
+	@if [ "$(OS)" = "Windows_NT" ]; then \
+		echo "🪟 检测到 Windows 环境，设置 64 位架构..."; \
+		set GOARCH=amd64 && set CGO_ENABLED=1 && go build ${LDFLAGS} -o ${BUILD_DIR}/${BINARY_NAME}.exe ${MAIN_PATH}; \
+	else \
+		CGO_ENABLED=1 go build ${LDFLAGS} -o ${BUILD_DIR}/${BINARY_NAME} ${MAIN_PATH}; \
+	fi
 	@echo "✅ 构建完成: ${BUILD_DIR}/${BINARY_NAME}"
 
 # 跨平台构建
@@ -40,13 +45,15 @@ build-all:
 	
 	@echo "✅ 跨平台构建完成"
 
-# 构建简单版本（不使用 Tree-sitter）
-.PHONY: build-simple
-build-simple:
-	@echo "🔨 构建 CodeCartographer (无 Tree-sitter)..."
+# Windows 专用构建（解决 64 位架构问题）
+.PHONY: build-windows
+build-windows:
+	@echo "🪟 构建 Windows 版本（64 位）..."
 	@mkdir -p ${BUILD_DIR}
-	CGO_ENABLED=0 go build ${LDFLAGS} -tags simple -o ${BUILD_DIR}/${BINARY_NAME} ${MAIN_PATH}
-	@echo "✅ 构建完成: ${BUILD_DIR}/${BINARY_NAME}"
+	@echo "设置 64 位架构和 CGO..."
+	set GOARCH=amd64 && set CGO_ENABLED=1 && go build ${LDFLAGS} -o ${BUILD_DIR}/${BINARY_NAME}.exe ${MAIN_PATH}
+	@echo "✅ Windows 构建完成: ${BUILD_DIR}/${BINARY_NAME}.exe"
+
 
 # 运行程序
 .PHONY: run
@@ -163,8 +170,8 @@ example: build
 .PHONY: help
 help:
 	@echo "CodeCartographer Makefile 命令:"
-	@echo "  build        - 构建二进制文件 (启用 CGO)"
-	@echo "  build-simple - 构建简单版本 (无 Tree-sitter)"
+	@echo "  build        - 构建二进制文件 (启用 CGO，自动检测平台)"
+	@echo "  build-windows- 构建 Windows 版本 (64 位架构)"
 	@echo "  build-all    - 跨平台构建"
 	@echo "  run          - 构建并运行程序"
 	@echo "  test         - 运行测试"
