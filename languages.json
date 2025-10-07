@@ -55,7 +55,7 @@
       "top_level_symbols": [
         "(function_definition) @symbol",
         "(class_definition) @symbol",
-        "(assignment) @symbol"
+        "(assignment target: (identifier) @name) @symbol"
       ],
       "container_body": "(block) @body",
       "container_methods": "(function_definition) @method"

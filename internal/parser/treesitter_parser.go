@@ -211,6 +211,41 @@ func (p *TreeSitterParser) nodeToSymbol(node *sitter.Node, content []byte) model
 func (p *TreeSitterParser) extractPrototype(node *sitter.Node, content []byte) string {
 	nodeType := node.Type()
 	
+	// 对于 class 节点，只提取类声明部分（类名和可能的继承）
+	if nodeType == "class_declaration" {
+		// 查找 class_body 子节点
+		childCount := int(node.ChildCount())
+		for i := 0; i < childCount; i++ {
+			child := node.Child(i)
+			if child == nil {
+				continue
+			}
+			
+			if child.Type() == "class_body" {
+				// 提取到 class_body 之前的内容
+				prototype := string(content[node.StartByte():child.StartByte()])
+				return strings.TrimSpace(prototype)
+			}
+		}
+	}
+	
+	// 对于 Python 的 class_definition，查找冒号
+	if nodeType == "class_definition" {
+		fullText := string(content[node.StartByte():node.EndByte()])
+		lines := strings.Split(fullText, "\n")
+		for i, line := range lines {
+			if strings.Contains(line, ":") && !strings.Contains(line, "::") {
+				// 找到第一个冒号，返回包含冒号的部分
+				idx := strings.Index(line, ":")
+				if i == 0 {
+					return strings.TrimSpace(line[:idx+1])
+				}
+				result := strings.Join(lines[:i], "\n") + "\n" + line[:idx+1]
+				return strings.TrimSpace(result)
+			}
+		}
+	}
+	
 	// 通过遍历子节点找到函数体（block/body）并排除它
 	var declarationEnd uint32
 	hasBody := false
@@ -242,12 +277,9 @@ func (p *TreeSitterParser) extractPrototype(node *sitter.Node, content []byte) s
 		return strings.TrimSpace(prototype)
 	}
 	
-	// 如果没有找到函数体（可能是接口方法声明、类型定义等），返回整个节点
-	// 但排除可能的尾随大括号
-	fullText := string(content[node.StartByte():node.EndByte()])
-	
-	// 对于 Python 的函数/类定义，查找冒号
-	if nodeType == "function_definition" || nodeType == "class_definition" {
+	// 对于 Python 的函数定义，查找冒号
+	if nodeType == "function_definition" {
+		fullText := string(content[node.StartByte():node.EndByte()])
 		lines := strings.Split(fullText, "\n")
 		for i, line := range lines {
 			if strings.Contains(line, ":") && !strings.Contains(line, "::") {
@@ -262,6 +294,8 @@ func (p *TreeSitterParser) extractPrototype(node *sitter.Node, content []byte) s
 		}
 	}
 	
+	// 如果没有找到函数体（可能是接口方法声明、类型定义等），返回整个节点
+	fullText := string(content[node.StartByte():node.EndByte()])
 	return strings.TrimSpace(fullText)
 }
 
