@@ -197,11 +197,72 @@ func (p *TreeSitterParser) nodeToSymbol(node *sitter.Node, content []byte) model
 	start := node.StartPoint()
 	end := node.EndPoint()
 
+	// 提取函数原型（不包括函数体）
+	prototype := p.extractPrototype(node, content)
+
 	return models.Symbol{
-		Prototype: string(content[node.StartByte():node.EndByte()]),
+		Prototype: prototype,
 		Purpose:   "", // TODO: 从注释提取
 		Range:     []int{int(start.Row) + 1, int(end.Row) + 1},
 	}
+}
+
+// extractPrototype 提取函数原型（不包括函数体）
+func (p *TreeSitterParser) extractPrototype(node *sitter.Node, content []byte) string {
+	nodeType := node.Type()
+	
+	// 通过遍历子节点找到函数体（block/body）并排除它
+	var declarationEnd uint32
+	hasBody := false
+	
+	childCount := int(node.ChildCount())
+	for i := 0; i < childCount; i++ {
+		child := node.Child(i)
+		if child == nil {
+			continue
+		}
+		
+		childType := child.Type()
+		
+		// Go: block
+		// JavaScript/TypeScript: statement_block
+		// Python: block
+		if childType == "block" || childType == "statement_block" || 
+		   childType == "body" || childType == "function_body" {
+			// 找到函数体，记录其起始位置
+			declarationEnd = child.StartByte()
+			hasBody = true
+			break
+		}
+	}
+	
+	if hasBody && declarationEnd > node.StartByte() {
+		// 提取从节点开始到函数体之前的内容
+		prototype := string(content[node.StartByte():declarationEnd])
+		return strings.TrimSpace(prototype)
+	}
+	
+	// 如果没有找到函数体（可能是接口方法声明、类型定义等），返回整个节点
+	// 但排除可能的尾随大括号
+	fullText := string(content[node.StartByte():node.EndByte()])
+	
+	// 对于 Python 的函数/类定义，查找冒号
+	if nodeType == "function_definition" || nodeType == "class_definition" {
+		lines := strings.Split(fullText, "\n")
+		for i, line := range lines {
+			if strings.Contains(line, ":") && !strings.Contains(line, "::") {
+				// 找到第一个冒号，返回包含冒号的部分
+				idx := strings.Index(line, ":")
+				if i == 0 {
+					return strings.TrimSpace(line[:idx+1])
+				}
+				result := strings.Join(lines[:i], "\n") + "\n" + line[:idx+1]
+				return strings.TrimSpace(result)
+			}
+		}
+	}
+	
+	return strings.TrimSpace(fullText)
 }
 
 // extractFilePurpose 提取文件用途
