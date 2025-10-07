@@ -49,38 +49,30 @@ func createDefaultLanguagesConfig(configPath string) (models.LanguagesConfig, er
 	defaultConfig := models.LanguagesConfig{
 		"go": {
 			Extensions: []string{".go"},
-			Queries: models.Queries{
-				TopLevelSymbols: []string{
-					"(function_declaration) @symbol",
-					"(method_declaration) @symbol",
-					"(type_declaration) @symbol",
-					"(const_declaration) @symbol",
-					"(var_declaration) @symbol",
-				},
-			},
+		},
+		"java": {
+			Extensions: []string{".java"},
+		},
+		"csharp": {
+			Extensions: []string{".cs"},
+		},
+		"cpp": {
+			Extensions: []string{".cpp", ".hpp", ".cc", ".cxx"},
+		},
+		"c": {
+			Extensions: []string{".c", ".h"},
+		},
+		"rust": {
+			Extensions: []string{".rs"},
 		},
 		"javascript": {
 			Extensions: []string{".js", ".jsx"},
-			Queries: models.Queries{
-				TopLevelSymbols: []string{
-					"(function_declaration) @symbol",
-					"(variable_declarator value: (arrow_function)) @symbol",
-					"(class_declaration) @symbol",
-					"(const_declaration) @symbol",
-					"(let_declaration) @symbol",
-					"(var_declaration) @symbol",
-				},
-			},
+		},
+		"typescript": {
+			Extensions: []string{".ts", ".tsx"},
 		},
 		"python": {
 			Extensions: []string{".py"},
-			Queries: models.Queries{
-				TopLevelSymbols: []string{
-					"(function_definition) @symbol",
-					"(class_definition) @symbol",
-					"(assignment target: (identifier) @name) @symbol",
-				},
-			},
 		},
 	}
 

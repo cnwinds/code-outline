@@ -38,12 +38,6 @@ type ProjectContext struct {
 // LanguageConfig 表示单个语言的配置
 type LanguageConfig struct {
 	Extensions []string `json:"extensions"` // 文件扩展名列表
-	Queries    Queries  `json:"queries"`    // 查询规则
-}
-
-// Queries 表示Tree-sitter查询规则
-type Queries struct {
-	TopLevelSymbols []string `json:"top_level_symbols"` // 顶级符号查询
 }
 
 // LanguagesConfig 表示所有语言的配置

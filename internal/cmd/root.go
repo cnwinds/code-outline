@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -219,14 +221,50 @@ func saveProjectContext(context *models.ProjectContext, outputPath string) error
 		return err
 	}
 
-	// 序列化为JSON
-	data, err := json.MarshalIndent(context, "", "  ")
+	// 序列化为JSON，使用紧凑格式
+	data, err := json.Marshal(context)
+	if err != nil {
+		return err
+	}
+
+	// 格式化JSON，但保持数组在一行
+	data, err = formatJSONCompact(data)
 	if err != nil {
 		return err
 	}
 
 	// 写入文件
 	return os.WriteFile(outputPath, data, 0600)
+}
+
+// formatJSONCompact 格式化JSON，保持range数组在一行，过滤空的purpose字段
+func formatJSONCompact(data []byte) ([]byte, error) {
+	// 使用MarshalIndent格式化JSON
+	formatted, err := json.MarshalIndent(json.RawMessage(data), "", "  ")
+	if err != nil {
+		return nil, err
+	}
+
+	// 1. 将range数组格式化为单行
+	rangePattern := regexp.MustCompile(`"range": \[\s*\n\s*(\d+),\s*\n\s*(\d+)\s*\n\s*\]`)
+	formatted = rangePattern.ReplaceAll(formatted, []byte(`"range": [$1, $2]`))
+
+	// 2. 删除空的purpose字段
+	emptyPurposePattern := regexp.MustCompile(`\s*"purpose":\s*"",?\s*\n`)
+	formatted = emptyPurposePattern.ReplaceAll(formatted, []byte(""))
+
+	// 3. 修复删除purpose后的缩进问题
+	formatted = bytes.ReplaceAll(formatted, []byte(",\n                            \"range\":"), []byte(",\n          \"range\":"))
+
+	// 4. 修复prototype和range在同一行的情况
+	prototypeRangePattern := regexp.MustCompile(`"prototype":\s*"([^"]*)",\s*"range":`)
+	formatted = prototypeRangePattern.ReplaceAll(formatted, []byte(`"prototype": "$1",`+"\n          "+`"range":`))
+
+	// 5. 修复range缩进不正确的情况
+	rangeIndentPattern := regexp.MustCompile(`(\n\s{10})"range":`)
+	formatted = rangeIndentPattern.ReplaceAll(formatted, []byte(`$1  "range":`))
+
+	return formatted, nil
 }
 
 // runUpdate 执行更新命令
@@ -429,10 +467,17 @@ func runData(cmd *cobra.Command, args []string) error {
 		fmt.Println("✅ 数据已保存到文件")
 	} else {
 		// 输出到标准输出
-		jsonData, err := json.MarshalIndent(dataResult, "", "  ")
+		jsonData, err := json.Marshal(dataResult)
 		if err != nil {
 			return fmt.Errorf("序列化数据失败: %w", err)
 		}
+
+		// 格式化JSON，但保持range数组在一行
+		jsonData, err = formatJSONCompact(jsonData)
+		if err != nil {
+			return fmt.Errorf("格式化JSON失败: %w", err)
+		}
+
 		fmt.Println(string(jsonData))
 	}
 

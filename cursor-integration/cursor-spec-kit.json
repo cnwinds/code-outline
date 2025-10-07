@@ -1,0 +1,57 @@
+{
+  "name": "CodeCartographer 声明管理工具",
+  "version": "1.0.0",
+  "description": "快速了解项目声明和结构的工具集",
+  "tools": [
+    {
+      "name": "get-all-declarations",
+      "displayName": "获取所有文件声明",
+      "description": "获取项目中所有文件的声明内容",
+      "command": "python",
+      "args": ["declaration-manager-simple.py", "get-all", "--path", "${workspaceFolder}"],
+      "cwd": "${workspaceFolder}",
+      "output": "all_declarations.json",
+      "category": "声明管理"
+    },
+    {
+      "name": "get-file-declarations",
+      "displayName": "获取指定文件声明",
+      "description": "获取指定文件的声明内容",
+      "command": "python",
+      "args": ["declaration-manager-simple.py", "get-file", "--path", "${workspaceFolder}", "--file", "${input:filePath}"],
+      "cwd": "${workspaceFolder}",
+      "output": "file_declarations.json",
+      "category": "声明管理"
+    },
+    {
+      "name": "create-project-declarations",
+      "displayName": "创建项目声明",
+      "description": "创建整个项目的声明内容文件",
+      "command": "python",
+      "args": ["declaration-manager-simple.py", "create-project", "--path", "${workspaceFolder}"],
+      "cwd": "${workspaceFolder}",
+      "output": "project_declarations.json",
+      "category": "声明管理"
+    },
+    {
+      "name": "update-file-declarations",
+      "displayName": "更新文件声明",
+      "description": "更新指定文件的声明内容",
+      "command": "python",
+      "args": ["declaration-manager-simple.py", "update-file", "--path", "${workspaceFolder}", "--file", "${input:filePath}"],
+      "cwd": "${workspaceFolder}",
+      "output": "updated_declarations.json",
+      "category": "声明管理"
+    }
+  ],
+  "settings": {
+    "contextgen_path": "build/contextgen.exe",
+    "exclude_patterns": ["node_modules", "vendor", ".git", "build", "dist"],
+    "supported_languages": ["go", "javascript", "typescript", "python", "java", "csharp", "rust", "cpp", "c"],
+    "output_format": "json",
+    "max_file_size": "10MB",
+    "timeout": 60,
+    "declaration_cache": true,
+    "auto_update": false
+  }
+}
