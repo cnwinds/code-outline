@@ -137,7 +137,7 @@ func (s *Scanner) parseFileConcurrently(
 
 	// 安全地更新结果
 	mu.Lock()
-	files[relativePath] = *fileInfo
+	files[filePath] = *fileInfo
 
 	// 收集技术栈信息
 	lang := s.getLanguageFromExtension(fileExt)
