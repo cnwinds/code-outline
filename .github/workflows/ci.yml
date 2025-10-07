@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest]
         go: ['1.21', '1.22']
     
     steps:
@@ -40,10 +40,6 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential
 
-    - name: Install build dependencies (macOS)
-      if: matrix.os == 'macos-latest'
-      run: |
-        xcode-select -p || xcode-select --install
 
     - name: Install build dependencies (Windows)
       if: matrix.os == 'windows-latest'
@@ -96,7 +92,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest]
     
     steps:
     - name: Checkout code
@@ -113,12 +109,6 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential
 
-    - name: Install build dependencies (macOS)
-      if: matrix.os == 'macos-latest'
-      run: |
-        # Xcode Command Line Tools 通常已预装在 GitHub Actions 的 macOS 环境中
-        # 验证是否可用
-        xcode-select -p || xcode-select --install
 
     - name: Install build dependencies (Windows)
       if: matrix.os == 'windows-latest'
@@ -135,8 +125,6 @@ jobs:
         mkdir -p build
         if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
           go build -o build/contextgen-linux-amd64 ./cmd/contextgen
-        elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-          go build -o build/contextgen-darwin-amd64 ./cmd/contextgen
         elif [ "${{ matrix.os }}" == "windows-latest" ]; then
           go build -o build/contextgen-windows-amd64.exe ./cmd/contextgen
         fi
