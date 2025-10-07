@@ -44,6 +44,7 @@ type LanguageConfig struct {
 // Queries 表示Tree-sitter查询规则
 type Queries struct {
 	TopLevelSymbols []string `json:"top_level_symbols"` // 顶级符号查询
+	CommentPatterns []string `json:"comment_patterns"`  // 注释查询模式
 }
 
 // LanguagesConfig 表示所有语言的配置
