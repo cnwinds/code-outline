@@ -263,26 +263,8 @@ func (p *TreeSitterParser) extractClassMethods(classNode *sitter.Node, content [
 			}
 		}
 		
-		// 对于 Python，方法直接在类节点下
-		if childType == "function_definition" {
-			// 提取方法原型
-			methodPrototype := p.extractPrototype(child, content)
-			// 在方法名前面加上类名
-			methodPrototype = p.addClassNameToMethod(className, methodPrototype)
-			
-			start := child.StartPoint()
-			end := child.EndPoint()
-			
-			method := models.Symbol{
-				Prototype: methodPrototype,
-				Purpose:   "",
-				Range:     []int{int(start.Row) + 1, int(end.Row) + 1},
-			}
-			
-			methods = append(methods, method)
-		}
-		
-		// 对于 Python，也可能在 block 子节点中
+		// 对于 Python，方法可能在类节点下或 block 子节点中
+		// 优先检查 block 子节点，避免重复提取
 		if childType == "block" {
 			// 遍历 block 的子节点查找方法
 			blockChildCount := int(child.ChildCount())
@@ -311,6 +293,23 @@ func (p *TreeSitterParser) extractClassMethods(classNode *sitter.Node, content [
 					methods = append(methods, method)
 				}
 			}
+		} else if childType == "function_definition" {
+			// 如果方法直接在类节点下（非 block 中）
+			// 提取方法原型
+			methodPrototype := p.extractPrototype(child, content)
+			// 在方法名前面加上类名
+			methodPrototype = p.addClassNameToMethod(className, methodPrototype)
+			
+			start := child.StartPoint()
+			end := child.EndPoint()
+			
+			method := models.Symbol{
+				Prototype: methodPrototype,
+				Purpose:   "",
+				Range:     []int{int(start.Row) + 1, int(end.Row) + 1},
+			}
+			
+			methods = append(methods, method)
 		}
 	}
 	

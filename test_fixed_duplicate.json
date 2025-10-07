@@ -2,11 +2,11 @@
   "projectName": "testdata",
   "projectGoal": "TODO: 请在此描述项目目标和主要功能",
   "techStack": [
-    "JavaScript",
     "Go",
-    "Python"
+    "Python",
+    "JavaScript"
   ],
-  "lastUpdated": "2025-10-07T18:02:32.2268498+08:00",
+  "lastUpdated": "2025-10-07T18:30:22.7467223+08:00",
   "architecture": {
     "overview": "TODO: 请在此描述项目的整体架构",
     "moduleSummary": {
@@ -18,7 +18,7 @@
       "purpose": "TODO: Describe the purpose of this file.",
       "symbols": [
         {
-          "prototype": "func NewGreeter(name string) *Greeter {\r\n\treturn \u0026Greeter{Name: name}\r\n}",
+          "prototype": "func NewGreeter(name string) *Greeter",
           "purpose": "",
           "range": [
             44,
@@ -50,7 +50,7 @@
           ]
         },
         {
-          "prototype": "func (g *Greeter) SayHello(person string) string {\r\n\treturn fmt.Sprintf(\"Hello %s, I'm %s!\", person, g.Name)\r\n}",
+          "prototype": "func (g *Greeter) SayHello(person string) string",
           "purpose": "",
           "range": [
             49,
@@ -105,15 +105,7 @@
       "purpose": "用户管理模块",
       "symbols": [
         {
-          "prototype": "user =\u003e user.id === id",
-          "purpose": "",
-          "range": [
-            20,
-            20
-          ]
-        },
-        {
-          "prototype": "(id, name, email) =\u003e {\r\n    return new User(id, name, email);\r\n}",
+          "prototype": "createUser = (id, name, email) =\u003e {\r\n    return new User(id, name, email);\r\n}",
           "purpose": "",
           "range": [
             39,
@@ -121,19 +113,71 @@
           ]
         },
         {
-          "prototype": "class UserManager {\r\n    constructor() {\r\n        this.users = [];\r\n    }\r\n\r\n    // 添加用户\r\n    addUser(user) {\r\n        this.users.push(user);\r\n        return this.users.length;\r\n    }\r\n\r\n    // 获取所有用户\r\n    getUsers() {\r\n        return [...this.users];\r\n    }\r\n\r\n    // 根据ID查找用户\r\n    findUserById(id) {\r\n        return this.users.find(user =\u003e user.id === id);\r\n    }\r\n}",
+          "prototype": "class UserManager",
           "purpose": "",
           "range": [
             2,
             22
+          ],
+          "methods": [
+            {
+              "prototype": "UserManager.constructor()",
+              "purpose": "",
+              "range": [
+                3,
+                5
+              ]
+            },
+            {
+              "prototype": "UserManager.addUser(user)",
+              "purpose": "",
+              "range": [
+                8,
+                11
+              ]
+            },
+            {
+              "prototype": "UserManager.getUsers()",
+              "purpose": "",
+              "range": [
+                14,
+                16
+              ]
+            },
+            {
+              "prototype": "UserManager.findUserById(id)",
+              "purpose": "",
+              "range": [
+                19,
+                21
+              ]
+            }
           ]
         },
         {
-          "prototype": "class User {\r\n    constructor(id, name, email) {\r\n        this.id = id;\r\n        this.name = name;\r\n        this.email = email;\r\n    }\r\n\r\n    // 获取用户信息\r\n    getInfo() {\r\n        return `${this.name} (${this.email})`;\r\n    }\r\n}",
+          "prototype": "class User",
           "purpose": "",
           "range": [
             25,
             36
+          ],
+          "methods": [
+            {
+              "prototype": "User.constructor(id, name, email)",
+              "purpose": "",
+              "range": [
+                26,
+                30
+              ]
+            },
+            {
+              "prototype": "User.getInfo()",
+              "purpose": "",
+              "range": [
+                33,
+                35
+              ]
+            }
           ]
         }
       ],
@@ -205,6 +249,40 @@
           "range": [
             7,
             46
+          ],
+          "methods": [
+            {
+              "prototype": "def UserManager.__init__(self):",
+              "purpose": "",
+              "range": [
+                10,
+                12
+              ]
+            },
+            {
+              "prototype": "def UserManager.add_user(self, user):",
+              "purpose": "",
+              "range": [
+                14,
+                24
+              ]
+            },
+            {
+              "prototype": "def UserManager.get_users(self):",
+              "purpose": "",
+              "range": [
+                26,
+                32
+              ]
+            },
+            {
+              "prototype": "def UserManager.find_user_by_id(self, user_id):",
+              "purpose": "",
+              "range": [
+                34,
+                46
+              ]
+            }
           ]
         },
         {
@@ -213,38 +291,24 @@
           "range": [
             48,
             69
-          ]
-        },
-        {
-          "prototype": "self.users = []",
-          "purpose": "",
-          "range": [
-            12,
-            12
-          ]
-        },
-        {
-          "prototype": "self.id = user_id",
-          "purpose": "",
-          "range": [
-            59,
-            59
-          ]
-        },
-        {
-          "prototype": "self.name = name",
-          "purpose": "",
-          "range": [
-            60,
-            60
-          ]
-        },
-        {
-          "prototype": "self.email = email",
-          "purpose": "",
-          "range": [
-            61,
-            61
+          ],
+          "methods": [
+            {
+              "prototype": "def User.__init__(self, user_id, name, email):",
+              "purpose": "",
+              "range": [
+                51,
+                61
+              ]
+            },
+            {
+              "prototype": "def User.get_info(self):",
+              "purpose": "",
+              "range": [
+                63,
+                69
+              ]
+            }
           ]
         }
       ],
