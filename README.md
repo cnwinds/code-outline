@@ -35,6 +35,106 @@ make build-simple
 make run
 ```
 
+### 编译步骤
+
+#### 方法一：使用 Makefile（推荐）
+
+```bash
+# 完整功能构建（需要 C 编译器）
+make build
+
+# 简单模式构建（无需 C 编译器）
+make build-simple
+
+# 跨平台构建
+make build-all
+
+# 清理构建文件
+make clean
+```
+
+#### 方法二：直接使用 Go 命令
+
+**完整功能构建（推荐）**
+```bash
+# 确保 CGO 已启用
+export CGO_ENABLED=1
+
+# 构建
+go build -o build/contextgen ./cmd/contextgen
+
+# Windows 用户
+# $env:CGO_ENABLED=1
+# go build -o build/contextgen.exe ./cmd/contextgen
+```
+
+**简单模式构建（无需 C 编译器）**
+```bash
+# 禁用 CGO
+export CGO_ENABLED=0
+
+# 构建
+go build -o build/contextgen ./cmd/contextgen
+
+# Windows 用户
+# $env:CGO_ENABLED=0
+# go build -o build/contextgen.exe ./cmd/contextgen
+```
+
+**跨平台构建**
+```bash
+# Linux
+CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o build/contextgen-linux-amd64 ./cmd/contextgen
+
+# Windows
+CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -o build/contextgen-windows-amd64.exe ./cmd/contextgen
+
+# macOS
+CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -o build/contextgen-darwin-amd64 ./cmd/contextgen
+```
+
+#### 方法三：使用 Docker（避免环境问题）
+
+```bash
+# 构建 Docker 镜像
+docker build -t codecartographer .
+
+# 使用 Docker 运行
+docker run --rm -v $(pwd):/workspace codecartographer generate --path /workspace
+```
+
+#### 编译问题解决
+
+**Windows环境下的编译问题：**
+
+如果遇到CGO编译错误，可以：
+
+1. **使用简单模式**：
+```bash
+# 禁用CGO，避免tree-sitter依赖问题
+CGO_ENABLED=0 go build -o build/contextgen.exe ./cmd/contextgen
+```
+
+2. **修复CGO环境**：
+```bash
+# 安装MinGW（如果使用Chocolatey）
+choco install mingw -y
+
+# 设置环境变量
+$env:CGO_ENABLED=1
+$env:CC="gcc"
+
+# 然后重新构建
+go build -o build/contextgen.exe ./cmd/contextgen
+```
+
+3. **使用Docker构建**：
+```bash
+# 使用Docker避免本地环境问题
+docker build -t codecartographer .
+docker run --rm -v $(pwd):/workspace codecartographer generate --path /workspace
+```
+
 ### 基本使用
 
 ```bash
@@ -142,6 +242,276 @@ $ ./contextgen generate
 - **macOS**: 安装 Xcode Command Line Tools
 
 详细安装指南请参考：[Windows CGO 环境安装文档](docs/WINDOWS_CGO_SETUP.md)
+
+#### Windows 环境 GCC 安装
+
+**方法一：使用 Chocolatey（推荐）**
+```bash
+# 安装 Chocolatey（如果未安装）
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+# 安装 MinGW
+choco install mingw -y
+
+# 验证安装
+gcc --version
+```
+
+**方法二：使用 MSYS2**
+```bash
+# 1. 下载并安装 MSYS2: https://www.msys2.org/
+# 2. 打开 MSYS2 终端，运行：
+pacman -S mingw-w64-x86_64-gcc
+pacman -S mingw-w64-x86_64-pkg-config
+
+# 3. 将 MSYS2 的 bin 目录添加到 PATH
+# 通常路径为: C:\msys64\mingw64\bin
+```
+
+**方法三：使用 TDM-GCC**
+```bash
+# 1. 下载 TDM-GCC: https://jmeubank.github.io/tdm-gcc/
+# 2. 安装时选择 "Add to PATH"
+# 3. 重启命令行验证
+gcc --version
+```
+
+#### Linux 环境 GCC 安装
+
+**Ubuntu/Debian:**
+```bash
+sudo apt-get update
+sudo apt-get install -y build-essential
+```
+
+**CentOS/RHEL:**
+```bash
+sudo yum groupinstall "Development Tools"
+# 或者
+sudo dnf groupinstall "Development Tools"
+```
+
+**Arch Linux:**
+```bash
+sudo pacman -S base-devel
+```
+
+#### macOS 环境 GCC 安装
+
+```bash
+# 安装 Xcode Command Line Tools
+xcode-select --install
+
+# 或者使用 Homebrew
+brew install gcc
+```
+
+#### 验证 CGO 环境
+
+```bash
+# 设置环境变量
+export CGO_ENABLED=1
+
+# 验证 Go 可以找到 C 编译器
+go env CGO_ENABLED
+go env CC
+```
+
+#### 代码质量检查
+
+**安装 golangci-lint:**
+
+```bash
+# 方法一：使用官方安装脚本（推荐）
+curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.54.2
+
+# 方法二：使用 go install
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
+
+# 方法三：使用包管理器
+# Windows (Chocolatey)
+choco install golangci-lint
+
+# macOS (Homebrew)
+brew install golangci-lint
+
+# Ubuntu/Debian
+sudo apt-get install golangci-lint
+```
+
+**运行代码质量检查:**
+
+```bash
+# 运行所有检查
+golangci-lint run
+
+# 运行特定检查
+golangci-lint run --enable=gofmt,govet,ineffassign
+
+# 运行并显示详细信息
+golangci-lint run -v
+
+# 运行并生成报告
+golangci-lint run --out-format=json > lint-report.json
+
+# 运行特定目录
+golangci-lint run ./internal/...
+
+# 运行并修复可自动修复的问题
+golangci-lint run --fix
+```
+
+**Windows 环境下的 golangci-lint 使用**
+
+在Windows环境下，golangci-lint可能安装在特定路径下。如果遇到"命令未找到"错误，请使用完整路径：
+
+```bash
+# 使用完整路径运行（根据实际安装路径调整）
+C:\Users\Administrator\go\bin\windows_amd64\golangci-lint.exe run
+
+# 或者将golangci-lint添加到PATH环境变量中
+# 然后就可以直接使用：
+golangci-lint run
+```
+
+**验证安装和运行：**
+
+```bash
+# 检查golangci-lint版本
+C:\Users\Administrator\go\bin\windows_amd64\golangci-lint.exe --version
+
+# 运行代码检查
+C:\Users\Administrator\go\bin\windows_amd64\golangci-lint.exe run --config .golangci-simple.yml ./internal/config ./internal/scanner
+```
+
+
+**如果遇到兼容性问题，可以尝试以下解决方案：**
+
+1. **使用简化的配置**：
+```bash
+# 使用简化配置运行
+golangci-lint run --config .golangci-simple.yml
+```
+
+2. **使用基本的Go工具**：
+```bash
+# 使用Go内置的代码检查工具
+go vet ./...
+go fmt ./...
+go mod tidy
+```
+
+3. **在CI环境中运行**：
+golangci-lint在Linux/macOS的CI环境中通常工作正常，建议在CI/CD管道中运行完整的代码质量检查。
+
+**配置 golangci-lint:**
+
+创建 `.golangci.yml` 配置文件：
+
+```yaml
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+
+linters-settings:
+  govet:
+    check-shadowing: true
+  gocyclo:
+    min-complexity: 15
+  maligned:
+    suggest-new: true
+  dupl:
+    threshold: 100
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  misspell:
+    locale: US
+  lll:
+    line-length: 140
+  funlen:
+    lines: 100
+    statements: 50
+  gocognit:
+    min-complexity: 20
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - dupImport # https://github.com/go-critic/go-critic/issues/845
+      - ifElseChain
+      - octalLiteral
+      - whyNoLint
+      - wrapperFunc
+
+linters:
+  disable-all: true
+  enable:
+    - bodyclose
+    - deadcode
+    - depguard
+    - dogsled
+    - dupl
+    - errcheck
+    - exportloopref
+    - exhaustive
+    - funlen
+    - gochecknoinits
+    - goconst
+    - gocritic
+    - gocyclo
+    - gofmt
+    - goimports
+    - gomnd
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - lll
+    - misspell
+    - nakedret
+    - noctx
+    - nolintlint
+    - rowserrcheck
+    - staticcheck
+    - structcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - varcheck
+    - whitespace
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gomnd
+        - funlen
+        - goconst
+        - gocritic
+        - gocyclo
+        - lll
+        - dupl
+        - gosec
+        - gocognit
+    - path: internal/parser/treesitter_parser.go
+      linters:
+        - gocyclo
+        - funlen
+        - gocognit
+    - path: cmd/
+      linters:
+        - gocyclo
+        - funlen
+        - gocognit
+```
 
 ### 项目结构
 
