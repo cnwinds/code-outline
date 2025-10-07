@@ -39,11 +39,14 @@ func (s *Scanner) ScanProject(projectPath string) (map[string]models.FileInfo, [
 	// 用于收集错误的channel
 	errorChan := make(chan error, 100)
 	var scanErrors []error
+	var errorsMu sync.Mutex
 
 	// 启动错误收集goroutine
 	go func() {
 		for err := range errorChan {
+			errorsMu.Lock()
 			scanErrors = append(scanErrors, err)
+			errorsMu.Unlock()
 		}
 	}()
 
@@ -81,7 +84,7 @@ func (s *Scanner) ScanProject(projectPath string) (map[string]models.FileInfo, [
 
 		// 并发解析文件
 		wg.Add(1)
-		go func(filePath, relativePath string) {
+		go func(filePath, relativePath, fileExt string) {
 			defer wg.Done()
 
 			fileInfo, err := s.parser.ParseFile(filePath)
@@ -95,12 +98,12 @@ func (s *Scanner) ScanProject(projectPath string) (map[string]models.FileInfo, [
 			files[relativePath] = *fileInfo
 
 			// 收集技术栈信息
-			lang := s.getLanguageFromExtension(ext)
+			lang := s.getLanguageFromExtension(fileExt)
 			if lang != "" && !contains(techStack, lang) {
 				techStack = append(techStack, lang)
 			}
 			mu.Unlock()
-		}(path, relPath)
+		}(path, relPath, ext)
 
 		return nil
 	})
@@ -114,15 +117,21 @@ func (s *Scanner) ScanProject(projectPath string) (map[string]models.FileInfo, [
 	}
 
 	// 如果有扫描错误，记录但不中断
-	if len(scanErrors) > 0 {
-		fmt.Printf("警告: 扫描过程中遇到 %d 个错误:\n", len(scanErrors))
-		for i, err := range scanErrors {
+	errorsMu.Lock()
+	errorCount := len(scanErrors)
+	errorsCopy := make([]error, len(scanErrors))
+	copy(errorsCopy, scanErrors)
+	errorsMu.Unlock()
+
+	if errorCount > 0 {
+		fmt.Printf("警告: 扫描过程中遇到 %d 个错误:\n", errorCount)
+		for i, err := range errorsCopy {
 			if i < 5 { // 只显示前5个错误
 				fmt.Printf("  - %v\n", err)
 			}
 		}
-		if len(scanErrors) > 5 {
-			fmt.Printf("  ... 还有 %d 个错误\n", len(scanErrors)-5)
+		if errorCount > 5 {
+			fmt.Printf("  ... 还有 %d 个错误\n", errorCount-5)
 		}
 	}
 
