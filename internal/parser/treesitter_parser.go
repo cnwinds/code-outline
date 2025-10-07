@@ -180,6 +180,13 @@ func (p *TreeSitterParser) extractSymbols(node *sitter.Node, content []byte, lan
 			}
 
 			for _, capture := range match.Captures {
+				// 检查函数/方法是否在类内部
+				// 如果是类内部的方法，跳过（它们会作为类的 methods 提取）
+				nodeType := capture.Node.Type()
+				if (nodeType == "function_definition" || nodeType == "method_definition") && p.isInsideClass(capture.Node) {
+					continue
+				}
+				
 				symbol := p.nodeToSymbol(capture.Node, content)
 				symbols = append(symbols, symbol)
 			}
@@ -190,6 +197,20 @@ func (p *TreeSitterParser) extractSymbols(node *sitter.Node, content []byte, lan
 	}
 
 	return symbols
+}
+
+// isInsideClass 检查节点是否在类内部
+func (p *TreeSitterParser) isInsideClass(node *sitter.Node) bool {
+	// 向上遍历父节点，查找是否在类定义中
+	current := node.Parent()
+	for current != nil {
+		nodeType := current.Type()
+		if nodeType == "class_definition" || nodeType == "class_declaration" {
+			return true
+		}
+		current = current.Parent()
+	}
+	return false
 }
 
 // nodeToSymbol 将语法树节点转换为符号

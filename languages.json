@@ -16,6 +16,7 @@
     "queries": {
       "top_level_symbols": [
         "(function_declaration) @symbol",
+        "(method_definition) @symbol",
         "(variable_declarator value: (arrow_function)) @symbol",
         "(class_declaration) @symbol",
         "(const_declaration) @symbol",
@@ -29,6 +30,7 @@
     "queries": {
       "top_level_symbols": [
         "(function_declaration) @symbol",
+        "(method_definition) @symbol",
         "(variable_declarator value: (arrow_function)) @symbol",
         "(class_declaration) @symbol",
         "(interface_declaration) @symbol",
