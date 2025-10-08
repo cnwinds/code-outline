@@ -10,6 +10,7 @@ import (
 
 	"github.com/cnwinds/code-outline/internal/models"
 	"github.com/cnwinds/code-outline/internal/scanner"
+	"github.com/cnwinds/code-outline/internal/utils"
 )
 
 // IncrementalUpdater 增量更新器
@@ -90,6 +91,14 @@ func (u *IncrementalUpdater) loadExistingContext(contextPath string) (*models.Pr
 	if err := json.Unmarshal(data, &context); err != nil {
 		return nil, fmt.Errorf("解析上下文文件失败: %w", err)
 	}
+
+	// 标准化所有文件路径键，确保使用正斜杠格式
+	normalizedFiles := make(map[string]models.FileInfo, len(context.Files))
+	for filePath, fileInfo := range context.Files {
+		normalizedPath := utils.NormalizePath(filePath)
+		normalizedFiles[normalizedPath] = fileInfo
+	}
+	context.Files = normalizedFiles
 
 	return &context, nil
 }
@@ -208,15 +217,18 @@ func (u *IncrementalUpdater) detectTargetChanges(
 	// 处理指定的文件
 	for _, targetFile := range targetFiles {
 		// 标准化路径
-		normalizedFile := u.normalizePath(targetFile)
-		resolvedPath := u.resolveTargetPath(projectPath, normalizedFile)
+		normalizedFile := utils.NormalizePath(targetFile)
+		resolvedPath := utils.ResolveTargetPath(projectPath, normalizedFile)
+
+		// 获取相对路径作为键
+		relPath := utils.GetRelativePath(projectPath, resolvedPath)
 
 		// 检查文件是否存在
 		if _, err := os.Stat(resolvedPath); os.IsNotExist(err) {
 			// 文件不存在，检查是否在上下文中（可能是被删除的文件）
-			if existingFile, exists := context.Files[normalizedFile]; exists {
+			if existingFile, exists := context.Files[relPath]; exists {
 				changes = append(changes, FileChange{
-					Path:       normalizedFile,
+					Path:       relPath,
 					ChangeType: FileDeleted,
 					OldInfo:    &existingFile,
 				})
@@ -236,7 +248,7 @@ func (u *IncrementalUpdater) detectTargetChanges(
 		}
 
 		// 检查文件是否存在于上下文中
-		existingFile, exists := context.Files[normalizedFile]
+		existingFile, exists := context.Files[relPath]
 		if !exists {
 			// 新文件
 			newInfo, err := u.parser.ParseFile(resolvedPath)
@@ -244,7 +256,7 @@ func (u *IncrementalUpdater) detectTargetChanges(
 				return nil, fmt.Errorf("解析文件失败 %s: %w", resolvedPath, err)
 			}
 			changes = append(changes, FileChange{
-				Path:       normalizedFile,
+				Path:       relPath,
 				ChangeType: FileAdded,
 				NewInfo:    newInfo,
 			})
@@ -255,7 +267,7 @@ func (u *IncrementalUpdater) detectTargetChanges(
 				return nil, fmt.Errorf("解析文件失败 %s: %w", resolvedPath, err)
 			}
 			changes = append(changes, FileChange{
-				Path:       normalizedFile,
+				Path:       relPath,
 				ChangeType: FileModified,
 				OldInfo:    &existingFile,
 				NewInfo:    newInfo,
@@ -266,8 +278,8 @@ func (u *IncrementalUpdater) detectTargetChanges(
 	// 处理指定的目录
 	for _, targetDir := range targetDirs {
 		// 标准化路径
-		normalizedDir := u.normalizePath(targetDir)
-		resolvedDirPath := u.resolveTargetPath(projectPath, normalizedDir)
+		normalizedDir := utils.NormalizePath(targetDir)
+		resolvedDirPath := utils.ResolveTargetPath(projectPath, normalizedDir)
 
 		// 检查目录是否存在
 		if _, err := os.Stat(resolvedDirPath); os.IsNotExist(err) {
@@ -308,11 +320,7 @@ func (u *IncrementalUpdater) detectTargetChanges(
 			}
 
 			// 转换为相对路径
-			relPath, err := filepath.Rel(projectPath, path)
-			if err != nil {
-				return err
-			}
-			relPath = filepath.ToSlash(relPath) // 统一使用斜杠
+			relPath := utils.GetRelativePath(projectPath, path)
 
 			// 检查文件是否存在于上下文中
 			existingFile, exists := context.Files[relPath]
@@ -407,7 +415,7 @@ func (u *IncrementalUpdater) generateModuleSummary(files map[string]models.FileI
 
 	// 按模块分组文件
 	for filePath := range files {
-		dir := filepath.Dir(filePath)
+		dir := utils.NormalizePath(filepath.Dir(filePath))
 		if dir == "." {
 			dir = "root"
 		}
@@ -449,37 +457,4 @@ func (u *IncrementalUpdater) isSupportedFile(ext string) bool {
 		}
 	}
 	return false
-}
-
-// normalizePath 标准化路径，统一处理各种斜杠输入
-func (u *IncrementalUpdater) normalizePath(path string) string {
-	// 统一使用正斜杠
-	path = strings.ReplaceAll(path, "\\", "/")
-
-	// 处理多个连续斜杠
-	for strings.Contains(path, "//") {
-		path = strings.ReplaceAll(path, "//", "/")
-	}
-
-	// 移除末尾的斜杠（除非是根目录）
-	if len(path) > 1 && strings.HasSuffix(path, "/") {
-		path = path[:len(path)-1]
-	}
-
-	return path
-}
-
-// resolveTargetPath 解析目标路径，支持相对路径和绝对路径
-func (u *IncrementalUpdater) resolveTargetPath(projectPath, targetPath string) string {
-	// 标准化输入路径
-	targetPath = u.normalizePath(targetPath)
-	projectPath = u.normalizePath(projectPath)
-
-	// 如果是绝对路径，直接返回
-	if filepath.IsAbs(targetPath) {
-		return targetPath
-	}
-
-	// 如果是相对路径，相对于项目路径
-	return filepath.Join(projectPath, targetPath)
 }

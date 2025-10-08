@@ -17,6 +17,7 @@ import (
 	"github.com/cnwinds/code-outline/internal/parser"
 	"github.com/cnwinds/code-outline/internal/scanner"
 	"github.com/cnwinds/code-outline/internal/updater"
+	"github.com/cnwinds/code-outline/internal/utils"
 )
 
 var (
@@ -27,6 +28,7 @@ var (
 	updateDirs  string
 	dataFiles   string
 	dataDirs    string
+	compact     bool
 )
 
 // rootCmd 根命令
@@ -74,6 +76,7 @@ func init() {
 	generateCmd.Flags().StringVarP(&projectPath, "path", "p", ".", "项目路径")
 	generateCmd.Flags().StringVarP(&outputPath, "output", "o", "code-outline.json", "输出文件路径")
 	generateCmd.Flags().StringVarP(&excludeDirs, "exclude", "e", "", "要排除的目录或文件模式，用逗号分隔")
+	generateCmd.Flags().BoolVarP(&compact, "compact", "c", false, "生成紧凑的JSON输出（去掉所有空格）")
 
 	// 添加update命令行参数
 	updateCmd.Flags().StringVarP(&projectPath, "path", "p", ".", "项目路径")
@@ -81,10 +84,12 @@ func init() {
 	updateCmd.Flags().StringVarP(&excludeDirs, "exclude", "e", "", "要排除的目录或文件模式，用逗号分隔")
 	updateCmd.Flags().StringVarP(&updateFiles, "files", "f", "", "指定要更新的文件，用逗号分隔（如：file1.go,file2.js）")
 	updateCmd.Flags().StringVarP(&updateDirs, "dirs", "d", "", "指定要更新的目录，用逗号分隔（如：src/,internal/）")
+	updateCmd.Flags().BoolVarP(&compact, "compact", "c", false, "生成紧凑的JSON输出（去掉所有空格）")
 
 	// 添加query命令行参数
 	queryCmd.Flags().StringVarP(&projectPath, "path", "p", ".", "项目路径")
 	queryCmd.Flags().StringVarP(&outputPath, "output", "o", "", "输出文件路径（如果不指定则输出到标准输出）")
+	queryCmd.Flags().BoolVarP(&compact, "compact", "c", false, "生成紧凑的JSON输出（去掉所有空格）")
 	queryCmd.Flags().StringVarP(&excludeDirs, "exclude", "e", "", "要排除的目录或文件模式，用逗号分隔")
 	queryCmd.Flags().StringVarP(&dataFiles, "files", "f", "", "指定要查询的文件，用逗号分隔（如：file1.go,file2.js）")
 	queryCmd.Flags().StringVarP(&dataDirs, "dirs", "d", "", "指定要查询的目录，用逗号分隔（如：src/,internal/）")
@@ -209,7 +214,7 @@ func generateModuleSummary(files map[string]models.FileInfo) map[string]string {
 	// 按目录分组文件
 	dirGroups := make(map[string][]string)
 	for filePath := range files {
-		dir := filepath.Dir(filePath)
+		dir := utils.NormalizePath(filepath.Dir(filePath))
 		if dir == "." {
 			dir = "root"
 		}
@@ -235,16 +240,22 @@ func saveProjectContext(context *models.ProjectContext, outputPath string) error
 		return err
 	}
 
-	// 序列化为JSON，使用紧凑格式
+	// 序列化为JSON
 	data, err := json.Marshal(context)
 	if err != nil {
 		return err
 	}
 
-	// 格式化JSON，但保持数组在一行
-	data, err = formatJSONCompact(data)
-	if err != nil {
-		return err
+	// 根据compact选项决定格式化方式
+	if compact {
+		// 紧凑模式：直接使用原始JSON（无缩进）
+		// 不需要额外格式化
+	} else {
+		// 标准模式：格式化JSON，但保持数组在一行
+		data, err = formatJSONCompact(data)
+		if err != nil {
+			return err
+		}
 	}
 
 	// 写入文件
@@ -499,13 +510,18 @@ func runQuery(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("序列化数据失败: %w", err)
 		}
 
-		// 格式化JSON，但保持range数组在一行
-		jsonData, err = formatJSONCompact(jsonData)
-		if err != nil {
-			return fmt.Errorf("格式化JSON失败: %w", err)
+		// 根据compact选项决定格式化方式
+		if compact {
+			// 紧凑模式：直接输出原始JSON
+			fmt.Println(string(jsonData))
+		} else {
+			// 标准模式：格式化JSON，但保持range数组在一行
+			jsonData, err = formatJSONCompact(jsonData)
+			if err != nil {
+				return fmt.Errorf("格式化JSON失败: %w", err)
+			}
+			fmt.Println(string(jsonData))
 		}
-
-		fmt.Println(string(jsonData))
 	}
 
 	// 6. 显示统计信息
@@ -528,223 +544,6 @@ type DataStats struct {
 	Languages    []string `json:"languages"`
 }
 
-// getDataFromTargets 从指定目标获取数据
-func getDataFromTargets(parser scanner.FileParser, projectPath string, excludePatterns []string, targetFiles []string, targetDirs []string) (*DataResult, error) {
-	files := make(map[string]models.FileInfo)
-	techStack := make(map[string]bool)
-
-	// 如果指定了目标文件或目录，只处理这些
-	if len(targetFiles) > 0 || len(targetDirs) > 0 {
-		err := processTargetFiles(parser, projectPath, excludePatterns, targetFiles, targetDirs, files, techStack)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		// 处理整个项目
-		err := processAllFiles(parser, projectPath, excludePatterns, files, techStack)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// 统计信息
-	var languages []string
-	for lang := range techStack {
-		languages = append(languages, lang)
-	}
-
-	totalSymbols := 0
-	for _, fileInfo := range files {
-		totalSymbols += len(fileInfo.Symbols)
-	}
-
-	return &DataResult{
-		Files: files,
-		Stats: DataStats{
-			TotalFiles:   len(files),
-			TotalSymbols: totalSymbols,
-			Languages:    languages,
-		},
-	}, nil
-}
-
-// processTargetFiles 处理指定的文件和目录
-func processTargetFiles(parser scanner.FileParser, projectPath string, excludePatterns []string, targetFiles []string, targetDirs []string, files map[string]models.FileInfo, techStack map[string]bool) error {
-	// 处理指定的文件
-	for _, targetFile := range targetFiles {
-		// 解析并标准化路径
-		resolvedPath := resolveTargetPath(projectPath, targetFile)
-
-		if _, err := os.Stat(resolvedPath); os.IsNotExist(err) {
-			fmt.Printf("⚠️  文件不存在: %s (解析为: %s)\n", targetFile, resolvedPath)
-			continue
-		}
-
-		if shouldExcludeFile(resolvedPath, excludePatterns) {
-			continue
-		}
-
-		fileInfo, err := parser.ParseFile(resolvedPath)
-		if err != nil {
-			fmt.Printf("⚠️  解析文件失败 %s: %v\n", targetFile, err)
-			continue
-		}
-
-		// 使用相对路径作为键
-		relPath, err := filepath.Rel(projectPath, resolvedPath)
-		if err != nil {
-			relPath = targetFile
-		}
-		relPath = filepath.ToSlash(relPath)
-
-		files[relPath] = *fileInfo
-		updateTechStack(relPath, techStack)
-		fmt.Printf("✅ 已处理文件: %s\n", relPath)
-	}
-
-	// 处理指定的目录
-	for _, targetDir := range targetDirs {
-		// 解析并标准化路径
-		resolvedDirPath := resolveTargetPath(projectPath, targetDir)
-
-		if _, err := os.Stat(resolvedDirPath); os.IsNotExist(err) {
-			fmt.Printf("⚠️  目录不存在: %s (解析为: %s)\n", targetDir, resolvedDirPath)
-			continue
-		}
-
-		err := filepath.Walk(resolvedDirPath, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-
-			if info.IsDir() {
-				return nil
-			}
-
-			if shouldExcludeFile(path, excludePatterns) {
-				return nil
-			}
-
-			ext := filepath.Ext(path)
-			if !isSupportedFile(ext) {
-				return nil
-			}
-
-			relPath, err := filepath.Rel(projectPath, path)
-			if err != nil {
-				return err
-			}
-			relPath = filepath.ToSlash(relPath)
-
-			fileInfo, err := parser.ParseFile(path)
-			if err != nil {
-				fmt.Printf("⚠️  解析文件失败 %s: %v\n", relPath, err)
-				return nil
-			}
-
-			files[relPath] = *fileInfo
-			updateTechStack(relPath, techStack)
-			fmt.Printf("✅ 已处理文件: %s\n", relPath)
-
-			return nil
-		})
-
-		if err != nil {
-			return fmt.Errorf("遍历目录失败 %s: %w", resolvedDirPath, err)
-		}
-	}
-
-	return nil
-}
-
-// processAllFiles 处理所有文件
-func processAllFiles(parser scanner.FileParser, projectPath string, excludePatterns []string, files map[string]models.FileInfo, techStack map[string]bool) error {
-	return filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if info.IsDir() {
-			return nil
-		}
-
-		if shouldExcludeFile(path, excludePatterns) {
-			return nil
-		}
-
-		ext := filepath.Ext(path)
-		if !isSupportedFile(ext) {
-			return nil
-		}
-
-		relPath, err := filepath.Rel(projectPath, path)
-		if err != nil {
-			return err
-		}
-		relPath = filepath.ToSlash(relPath)
-
-		fileInfo, err := parser.ParseFile(path)
-		if err != nil {
-			fmt.Printf("⚠️  解析文件失败 %s: %v\n", relPath, err)
-			return nil
-		}
-
-		files[relPath] = *fileInfo
-		updateTechStack(relPath, techStack)
-		fmt.Printf("✅ 已处理文件: %s\n", relPath)
-
-		return nil
-	})
-}
-
-// shouldExcludeFile 检查文件是否应该被排除
-func shouldExcludeFile(path string, excludePatterns []string) bool {
-	path = filepath.ToSlash(path)
-	for _, pattern := range excludePatterns {
-		if matched, _ := filepath.Match(pattern, path); matched {
-			return true
-		}
-		if strings.Contains(path, pattern) {
-			return true
-		}
-	}
-	return false
-}
-
-// isSupportedFile 检查是否为支持的文件类型
-func isSupportedFile(ext string) bool {
-	supportedExts := []string{".go", ".js", ".jsx", ".ts", ".tsx", ".py", ".java", ".cs", ".rs", ".cpp", ".c", ".h"}
-	for _, supportedExt := range supportedExts {
-		if ext == supportedExt {
-			return true
-		}
-	}
-	return false
-}
-
-// updateTechStack 更新技术栈
-func updateTechStack(filePath string, techStack map[string]bool) {
-	ext := filepath.Ext(filePath)
-	switch ext {
-	case ".go":
-		techStack["Go"] = true
-	case ".js", ".jsx":
-		techStack["JavaScript"] = true
-	case ".ts", ".tsx":
-		techStack["TypeScript"] = true
-	case ".py":
-		techStack["Python"] = true
-	case ".java":
-		techStack["Java"] = true
-	case ".cs":
-		techStack["C#"] = true
-	case ".rs":
-		techStack["Rust"] = true
-	case ".cpp", ".c", ".h":
-		techStack["C/C++"] = true
-	}
-}
-
 // saveDataToFile 保存数据到文件
 func saveDataToFile(data *DataResult, outputPath string) error {
 	// 创建输出目录（如果不存在）
@@ -753,7 +552,17 @@ func saveDataToFile(data *DataResult, outputPath string) error {
 	}
 
 	// 序列化为JSON
-	dataBytes, err := json.MarshalIndent(data, "", "  ")
+	var dataBytes []byte
+	var err error
+
+	if compact {
+		// 紧凑模式：无缩进
+		dataBytes, err = json.Marshal(data)
+	} else {
+		// 标准模式：有缩进
+		dataBytes, err = json.MarshalIndent(data, "", "  ")
+	}
+
 	if err != nil {
 		return err
 	}
@@ -768,60 +577,6 @@ func printDataStatistics(data *DataResult) {
 	fmt.Printf("  📁 文件数量: %d\n", data.Stats.TotalFiles)
 	fmt.Printf("  🔍 符号数量: %d\n", data.Stats.TotalSymbols)
 	fmt.Printf("  🛠️  技术栈: %s\n", strings.Join(data.Stats.Languages, ", "))
-}
-
-// normalizePath 标准化路径，统一处理各种斜杠输入
-func normalizePath(path string) string {
-	// 统一使用正斜杠
-	path = strings.ReplaceAll(path, "\\", "/")
-
-	// 处理多个连续斜杠
-	for strings.Contains(path, "//") {
-		path = strings.ReplaceAll(path, "//", "/")
-	}
-
-	// 移除末尾的斜杠（除非是根目录）
-	if len(path) > 1 && strings.HasSuffix(path, "/") {
-		path = path[:len(path)-1]
-	}
-
-	return path
-}
-
-// resolveTargetPath 解析目标路径，支持相对路径和绝对路径
-func resolveTargetPath(projectPath, targetPath string) string {
-	// 标准化输入路径
-	targetPath = normalizePath(targetPath)
-	projectPath = normalizePath(projectPath)
-
-	// 如果是绝对路径，直接返回
-	if filepath.IsAbs(targetPath) {
-		return targetPath
-	}
-
-	// 如果是相对路径，相对于项目路径
-	return filepath.Join(projectPath, targetPath)
-}
-
-// parseTargetPaths 解析目标路径列表，支持各种路径格式
-func parseTargetPaths(targetPaths []string, projectPath string) []string {
-	var resolvedPaths []string
-
-	for _, targetPath := range targetPaths {
-		targetPath = strings.TrimSpace(targetPath)
-		if targetPath == "" {
-			continue
-		}
-
-		// 标准化路径
-		normalizedPath := normalizePath(targetPath)
-
-		// 解析路径
-		resolvedPath := resolveTargetPath(projectPath, normalizedPath)
-		resolvedPaths = append(resolvedPaths, resolvedPath)
-	}
-
-	return resolvedPaths
 }
 
 // loadProjectContext 加载项目上下文文件
@@ -872,7 +627,7 @@ func extractDataFromContext(context *models.ProjectContext, targetFiles, targetD
 		// 处理指定的文件
 		for _, targetFile := range targetFiles {
 			// 标准化文件路径
-			normalizedFile := normalizePath(targetFile)
+			normalizedFile := utils.NormalizePath(targetFile)
 
 			// 查找匹配的文件
 			for filePath, fileInfo := range context.Files {
@@ -894,7 +649,7 @@ func extractDataFromContext(context *models.ProjectContext, targetFiles, targetD
 		// 处理指定的目录
 		for _, targetDir := range targetDirs {
 			// 标准化目录路径
-			normalizedDir := normalizePath(targetDir)
+			normalizedDir := utils.NormalizePath(targetDir)
 
 			// 查找匹配目录下的文件
 			for filePath, fileInfo := range context.Files {

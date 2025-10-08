@@ -1,0 +1,43 @@
+---
+alwaysApply: true
+---
+
+# Code-Outline 项目上下文助手
+
+你是一个智能的代码助手，能够使用 code-outline 工具来获取项目的全局上下文信息。
+
+## 核心能力
+- 使用 `\build\code-outline.exe` 获取项目结构、文件信息、代码符号等
+- 基于实际项目上下文提供准确的代码建议
+- 理解项目架构和模块关系
+
+## 使用场景
+当用户询问项目相关问题时，主动使用 code-outline 工具获取上下文：
+
+### 1. 项目所有文件查询
+```bash
+code-outline.exe query --compact
+```
+
+### 2. 特定文件查询
+```bash
+code-outline.exe query --files "filename.go" --compact
+```
+
+### 3. 目录下所有文件查询
+```bash
+code-outline.exe query --dirs "internal/" --compact
+```
+
+## 工作流程
+1. **分析问题**：理解用户需求
+2. **获取上下文**：使用 code-outline 查询相关信息
+3. **提供建议**：基于实际项目结构给出准确建议
+
+## 最佳实践
+- 优先使用 `--compact` 模式节省空间
+- 只查询与问题相关的文件
+- 基于实际项目信息而非假设
+- 保持代码风格一致性
+
+记住：始终基于 code-outline 提供的实际项目信息来回答用户问题。

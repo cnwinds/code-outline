@@ -108,27 +108,17 @@ func extractXMLDocComments(node *sitter.Node, content []byte) string {
 				continue
 			}
 
-			if strings.HasPrefix(comment, "<summary>") {
-				comment = strings.TrimPrefix(comment, "<summary>")
-			}
-			if strings.HasSuffix(comment, "</summary>") {
-				comment = strings.TrimSuffix(comment, "</summary>")
-			}
+			comment = strings.TrimPrefix(comment, "<summary>")
+			comment = strings.TrimSuffix(comment, "</summary>")
 			if strings.HasPrefix(comment, "<param") {
 				// 提取参数描述
 				if idx := strings.Index(comment, ">"); idx > 0 {
 					comment = comment[idx+1:]
 				}
 			}
-			if strings.HasPrefix(comment, "<returns>") {
-				comment = strings.TrimPrefix(comment, "<returns>")
-			}
-			if strings.HasSuffix(comment, "</returns>") {
-				comment = strings.TrimSuffix(comment, "</returns>")
-			}
-			if strings.HasSuffix(comment, "</param>") {
-				comment = strings.TrimSuffix(comment, "</param>")
-			}
+			comment = strings.TrimPrefix(comment, "<returns>")
+			comment = strings.TrimSuffix(comment, "</returns>")
+			comment = strings.TrimSuffix(comment, "</param>")
 
 			comment = strings.TrimSpace(comment)
 			if comment != "" {

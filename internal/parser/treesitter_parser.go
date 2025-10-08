@@ -256,13 +256,6 @@ func (p *TreeSitterParser) extractSymbols(node *sitter.Node, content []byte, lan
 	return symbols
 }
 
-// nodeToSymbol 将语法树节点转换为符号（兼容旧版本）
-func (p *TreeSitterParser) nodeToSymbol(node *sitter.Node, content []byte) models.Symbol {
-	// 使用默认的Go提取器作为后备
-	extractor := p.extractorFactory.GetExtractor("go")
-	return p.nodeToSymbolWithExtractor(node, content, extractor)
-}
-
 // nodeToSymbolWithExtractor 使用指定提取器将语法树节点转换为符号
 func (p *TreeSitterParser) nodeToSymbolWithExtractor(node *sitter.Node, content []byte, extractor LanguageExtractor) models.Symbol {
 	start := node.StartPoint()
@@ -315,7 +308,7 @@ func (p *TreeSitterParser) extractFilePurpose(content []byte) string {
 		}
 	}
 
-	return "TODO: Describe the purpose of this file."
+	return ""
 }
 
 // minInt 返回两个整数中的较小者

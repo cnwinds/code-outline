@@ -1,4 +1,12 @@
 # code-outline Makefile
+# 
+# 常用命令:
+#   make build        - 构建项目
+#   make lint         - 运行代码检查
+#   make lint-quick   - 快速代码检查（忽略包注释）
+#   make lint-unused  - 检查未使用的代码
+#   make test         - 运行测试
+#   make clean        - 清理构建文件
 
 # 变量定义
 BINARY_NAME=code-outline
@@ -79,23 +87,41 @@ fmt:
 	@echo "📝 格式化代码..."
 	go fmt ./...
 
-# 代码检查
+# 代码检查（默认：快速检查）
 .PHONY: lint
 lint:
-	@echo "🔍 运行代码检查..."
-	golangci-lint run --config .golangci-simple.yml
+	@echo "🔍 运行快速代码检查..."
+	staticcheck -checks="all,-ST1000" ./...
 
-# 代码检查（详细输出）
-.PHONY: lint-verbose
-lint-verbose:
-	@echo "🔍 运行代码检查（详细输出）..."
-	golangci-lint run --config .golangci-simple.yml -v
+# 代码检查（完整检查）
+.PHONY: lint-full
+lint-full:
+	@echo "🔍 运行完整代码检查..."
+	staticcheck ./...
 
-# 代码检查（自动修复）
-.PHONY: lint-fix
-lint-fix:
-	@echo "🔧 运行代码检查并自动修复..."
-	golangci-lint run --config .golangci-simple.yml --fix
+# 代码检查（忽略包注释）
+.PHONY: lint-quick
+lint-quick:
+	@echo "🔍 运行快速代码检查（忽略包注释）..."
+	staticcheck -checks="all,-ST1000" ./...
+
+# 代码检查（仅未使用代码）
+.PHONY: lint-unused
+lint-unused:
+	@echo "🔍 检查未使用的代码..."
+	staticcheck -checks=U1000 ./...
+
+# 代码检查（仅性能问题）
+.PHONY: lint-performance
+lint-performance:
+	@echo "🔍 检查性能问题..."
+	staticcheck -checks=S1000,S1001,S1002,S1003,S1004,S1005,S1006,S1007,S1008,S1009,S1010,S1011,S1012,S1016,S1017,S1018,S1019,S1020,S1021,S1023,S1024,S1025,S1028,S1029,S1030,S1031,S1032,S1033,S1034,S1035,S1036,S1037,S1038,S1039,S1040 ./...
+
+# 代码检查（仅错误和警告）
+.PHONY: lint-errors
+lint-errors:
+	@echo "🔍 检查错误和警告..."
+	staticcheck -checks="SA,ST" ./...
 
 # 代码检查（特定目录）
 .PHONY: lint-internal

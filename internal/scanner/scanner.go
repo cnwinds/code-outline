@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/cnwinds/code-outline/internal/models"
+	"github.com/cnwinds/code-outline/internal/utils"
 )
 
 // FileParser 文件解析器接口
@@ -105,10 +106,7 @@ func (s *Scanner) walkProjectFiles(
 		}
 
 		// 获取相对路径
-		relPath, err := filepath.Rel(projectPath, path)
-		if err != nil {
-			relPath = path
-		}
+		relPath := utils.GetRelativePath(projectPath, path)
 
 		// 并发解析文件
 		wg.Add(1)
@@ -137,7 +135,7 @@ func (s *Scanner) parseFileConcurrently(
 
 	// 安全地更新结果
 	mu.Lock()
-	files[filePath] = *fileInfo
+	files[relativePath] = *fileInfo
 
 	// 收集技术栈信息
 	lang := s.getLanguageFromExtension(fileExt)
