@@ -102,7 +102,7 @@
 
 ## 贡献者
 
-感谢所有为 CodeCartographer 项目做出贡献的开发者！
+感谢所有为 code-outline 项目做出贡献的开发者！
 
 ### 核心团队
 - @maintainer1 - 项目负责人
@@ -115,8 +115,8 @@
 
 ## 链接
 
-- [项目主页](https://github.com/cnwinds/CodeCartographer)
-- [问题报告](https://github.com/cnwinds/CodeCartographer/issues)
-- [功能请求](https://github.com/cnwinds/CodeCartographer/discussions)
+- [项目主页](https://github.com/cnwinds/code-outline)
+- [问题报告](https://github.com/cnwinds/code-outline/issues)
+- [功能请求](https://github.com/cnwinds/code-outline/discussions)
 - [贡献指南](CONTRIBUTING.md)
 - [许可证](LICENSE)

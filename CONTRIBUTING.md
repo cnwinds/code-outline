@@ -1,6 +1,6 @@
 # 贡献指南
 
-感谢您对 CodeCartographer 项目的关注！我们欢迎任何形式的贡献。
+感谢您对 code-outline 项目的关注！我们欢迎任何形式的贡献。
 
 ## 🚀 快速开始
 
@@ -14,8 +14,8 @@
 
 1. **Fork 并克隆项目**
    ```bash
-   git clone https://github.com/yourusername/CodeCartographer.git
-   cd CodeCartographer
+   git clone https://github.com/yourusername/code-outline.git
+   cd code-outline
    ```
 
 2. **安装依赖**
@@ -39,7 +39,7 @@
 
 在提交 Bug 报告前，请：
 
-1. 检查 [Issues](https://github.com/cnwinds/CodeCartographer/issues) 是否已存在相同问题
+1. 检查 [Issues](https://github.com/cnwinds/code-outline/issues) 是否已存在相同问题
 2. 使用最新版本进行测试
 3. 提供详细的复现步骤
 
@@ -189,7 +189,7 @@ make bench
 ## 🏗️ 项目结构
 
 ```
-CodeCartographer/
+code-outline/
 ├── cmd/contextgen/          # 主程序入口
 ├── internal/                # 内部包
 │   ├── cmd/                # CLI 命令
@@ -239,7 +239,7 @@ CodeCartographer/
 
 ## 🙏 致谢
 
-感谢所有为 CodeCartographer 项目做出贡献的开发者！
+感谢所有为 code-outline 项目做出贡献的开发者！
 
 ---
 

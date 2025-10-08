@@ -13,11 +13,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cnwinds/CodeCartographer/internal/config"
-	"github.com/cnwinds/CodeCartographer/internal/models"
-	"github.com/cnwinds/CodeCartographer/internal/parser"
-	"github.com/cnwinds/CodeCartographer/internal/scanner"
-	"github.com/cnwinds/CodeCartographer/internal/updater"
+	"github.com/cnwinds/code-outline/internal/config"
+	"github.com/cnwinds/code-outline/internal/models"
+	"github.com/cnwinds/code-outline/internal/parser"
+	"github.com/cnwinds/code-outline/internal/scanner"
+	"github.com/cnwinds/code-outline/internal/updater"
 )
 
 var (
@@ -34,8 +34,8 @@ var (
 // rootCmd 根命令
 var rootCmd = &cobra.Command{
 	Use:   "contextgen",
-	Short: "CodeCartographer - 通用型项目上下文生成器",
-	Long: `CodeCartographer 是一个高性能、跨平台的命令行工具，
+	Short: "code-outline - 通用型项目上下文生成器",
+	Long: `code-outline 是一个高性能、跨平台的命令行工具，
 用于通过静态分析为任何复杂的代码仓库生成统一、简洁且信息丰富的 project_context.json 文件。
 
 此文件将作为大语言模型（LLM）的"全局上下文记忆"，使其能够以前所未有的
@@ -102,7 +102,7 @@ func Execute(version string) error {
 		Use:   "version",
 		Short: "显示版本信息",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("CodeCartographer %s\n", version)
+			fmt.Printf("code-outline %s\n", version)
 			fmt.Printf("Go版本: %s\n", runtime.Version())
 			fmt.Printf("操作系统: %s/%s\n", runtime.GOOS, runtime.GOARCH)
 		},

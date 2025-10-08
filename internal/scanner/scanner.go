@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/cnwinds/CodeCartographer/internal/models"
+	"github.com/cnwinds/code-outline/internal/models"
 )
 
 // FileParser 文件解析器接口

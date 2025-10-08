@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CodeCartographer 声明管理工具安装脚本
+code-outline 声明管理工具安装脚本
 """
 
 import json
@@ -34,7 +34,7 @@ class SpecKitInstaller:
     def install_tools(self) -> bool:
         """安装工具到 Cursor"""
         try:
-            print("🚀 开始安装 CodeCartographer 声明管理工具...")
+            print("🚀 开始安装 code-outline 声明管理工具...")
             
             # 检查 Cursor 安装
             if not self.check_cursor_installation():
@@ -190,7 +190,7 @@ python3 declaration-manager.py "$@"
 def main():
     import argparse
     
-    parser = argparse.ArgumentParser(description="CodeCartographer 声明管理工具安装器")
+    parser = argparse.ArgumentParser(description="code-outline 声明管理工具安装器")
     parser.add_argument("action", choices=["install", "uninstall", "check"], 
                        help="操作类型")
     parser.add_argument("--verbose", action="store_true", help="详细输出")

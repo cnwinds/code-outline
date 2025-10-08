@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/cnwinds/CodeCartographer/internal/models"
+	"github.com/cnwinds/code-outline/internal/models"
 	sitter "github.com/smacker/go-tree-sitter"
 )
 

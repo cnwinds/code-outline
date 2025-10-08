@@ -1,6 +1,6 @@
 # Tree-sitter 实现指南
 
-本文档提供了在 CodeCartographer 中实现 Tree-sitter 解析器的完整指南。
+本文档提供了在 code-outline 中实现 Tree-sitter 解析器的完整指南。
 
 > **当前状态**: Tree-sitter 功能已集成完成。本指南提供实现细节和使用说明。
 
@@ -152,8 +152,8 @@ import (
 	"github.com/smacker/go-tree-sitter/javascript"
 	"github.com/smacker/go-tree-sitter/python"
 	
-	"github.com/cnwinds/CodeCartographer/internal/config"
-	"github.com/cnwinds/CodeCartographer/internal/models"
+	"github.com/cnwinds/code-outline/internal/config"
+	"github.com/cnwinds/code-outline/internal/models"
 )
 
 // TreeSitterParser Tree-sitter 解析器
@@ -304,14 +304,14 @@ func extractFilePurpose(content []byte) string {
 ```makefile
 # 添加 CGO 标志
 build:
-	@echo "🔨 构建 CodeCartographer..."
+	@echo "🔨 构建 code-outline..."
 	@mkdir -p ${BUILD_DIR}
 	CGO_ENABLED=1 go build ${LDFLAGS} -o ${BUILD_DIR}/${BINARY_NAME} ${MAIN_PATH}
 	@echo "✅ 构建完成: ${BUILD_DIR}/${BINARY_NAME}"
 
 # 添加不使用 Tree-sitter 的构建选项
 build-simple:
-	@echo "🔨 构建 CodeCartographer (无 Tree-sitter)..."
+	@echo "🔨 构建 code-outline (无 Tree-sitter)..."
 	@mkdir -p ${BUILD_DIR}
 	CGO_ENABLED=0 go build ${LDFLAGS} -tags simple -o ${BUILD_DIR}/${BINARY_NAME} ${MAIN_PATH}
 	@echo "✅ 构建完成: ${BUILD_DIR}/${BINARY_NAME}"
@@ -390,7 +390,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/cnwinds/CodeCartographer/internal/models"
+	"github.com/cnwinds/code-outline/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

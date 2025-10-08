@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cnwinds/CodeCartographer/internal/models"
+	"github.com/cnwinds/code-outline/internal/models"
 )
 
 // mockParser 用于测试的模拟解析器

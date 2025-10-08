@@ -18,8 +18,8 @@ import (
 	"github.com/smacker/go-tree-sitter/python"
 	"github.com/smacker/go-tree-sitter/rust"
 
-	"github.com/cnwinds/CodeCartographer/internal/config"
-	"github.com/cnwinds/CodeCartographer/internal/models"
+	"github.com/cnwinds/code-outline/internal/config"
+	"github.com/cnwinds/code-outline/internal/models"
 )
 
 const (

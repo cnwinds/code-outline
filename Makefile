@@ -1,4 +1,4 @@
-# CodeCartographer Makefile
+# code-outline Makefile
 
 # 变量定义
 BINARY_NAME=contextgen
@@ -14,7 +14,7 @@ all: clean build
 # 构建二进制文件
 .PHONY: build
 build:
-	@echo "🔨 构建 CodeCartographer..."
+	@echo "🔨 构建 code-outline..."
 	@mkdir -p ${BUILD_DIR}
 	@if [ "$(OS)" = "Windows_NT" ]; then \
 		echo "🪟 检测到 Windows 环境，设置 64 位架构..."; \
@@ -58,7 +58,7 @@ build-windows:
 # 运行程序
 .PHONY: run
 run: build
-	@echo "🚀 运行 CodeCartographer..."
+	@echo "🚀 运行 code-outline..."
 	${BUILD_DIR}/${BINARY_NAME} generate --path .
 
 # 测试
@@ -169,7 +169,7 @@ example: build
 # 显示帮助
 .PHONY: help
 help:
-	@echo "CodeCartographer Makefile 命令:"
+	@echo "code-outline Makefile 命令:"
 	@echo "  build        - 构建二进制文件 (启用 CGO，自动检测平台)"
 	@echo "  build-windows- 构建 Windows 版本 (64 位架构)"
 	@echo "  build-all    - 跨平台构建"

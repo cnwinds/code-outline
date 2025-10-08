@@ -1,6 +1,6 @@
-# CodeCartographer 声明管理工具
+# code-outline 声明管理工具
 
-基于 CodeCartographer 的快速项目声明和结构了解工具，专为 Cursor 编辑器集成设计。
+基于 code-outline 的快速项目声明和结构了解工具，专为 Cursor 编辑器集成设计。
 
 ## 🎯 核心功能
 
@@ -278,7 +278,7 @@ python install-spec-kit.py check
 ```bash
 # 克隆项目
 git clone <repository-url>
-cd CodeCartographer/cursor-integration/spec-driven-tools
+cd code-outline/cursor-integration/spec-driven-tools
 
 # 安装依赖
 pip install -r requirements.txt
@@ -293,4 +293,5 @@ MIT License - 详见 LICENSE 文件
 
 ---
 
-**CodeCartographer 声明管理工具** - 让您快速了解项目结构！ 🗺️✨
+**code-outline 声明管理工具** - 让您快速了解项目结构！ 🗺️✨
+

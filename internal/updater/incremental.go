@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cnwinds/CodeCartographer/internal/models"
-	"github.com/cnwinds/CodeCartographer/internal/scanner"
+	"github.com/cnwinds/code-outline/internal/models"
+	"github.com/cnwinds/code-outline/internal/scanner"
 )
 
 // IncrementalUpdater 增量更新器

@@ -117,7 +117,7 @@ func CreateComplexStruct(
 
 // main 程序入口点
 func main() {
-	greeter := NewGreeter("CodeCartographer")
+	greeter := NewGreeter("code-outline")
 	message := greeter.SayHello("World")
 	fmt.Println(message)
 

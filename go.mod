@@ -1,4 +1,4 @@
-module github.com/cnwinds/CodeCartographer
+module github.com/cnwinds/code-outline
 
 go 1.21
 

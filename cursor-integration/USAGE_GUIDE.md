@@ -1,8 +1,8 @@
-# CodeCartographer 声明管理工具使用指南
+# code-outline 声明管理工具使用指南
 
 ## 🎯 工具概述
 
-这是一个基于 CodeCartographer 的快速项目声明和结构了解工具，专为 Cursor 编辑器集成设计。工具提供4个核心功能：
+这是一个基于 code-outline 的快速项目声明和结构了解工具，专为 Cursor 编辑器集成设计。工具提供4个核心功能：
 
 1. **获取所有文件声明** - 分析整个项目的所有文件声明
 2. **获取指定文件声明** - 分析单个文件的声明内容  
@@ -234,7 +234,7 @@ python declaration-manager-simple.py get-all --output analysis.json
 
 **Q: 找不到 contextgen 可执行文件**
 ```bash
-# 确保 CodeCartographer 已构建
+# 确保 code-outline 已构建
 cd ../../  # 回到项目根目录
 make build
 ```
@@ -274,7 +274,7 @@ python install-spec-kit.py check
 
 ## 🎉 完成！
 
-现在您已经掌握了 CodeCartographer 声明管理工具的基本用法。这个工具将帮助您：
+现在您已经掌握了 code-outline 声明管理工具的基本用法。这个工具将帮助您：
 
 - 🚀 快速了解项目结构
 - 📊 分析代码声明和依赖
@@ -282,3 +282,4 @@ python install-spec-kit.py check
 - 🔄 维护代码一致性
 
 开始使用吧！如果遇到问题，请查看完整的 [README.md](README.md) 文档。
+

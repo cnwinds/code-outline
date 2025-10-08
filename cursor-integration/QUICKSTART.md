@@ -1,4 +1,4 @@
-# CodeCartographer 声明管理工具 - 快速开始
+# code-outline 声明管理工具 - 快速开始
 
 ## 🚀 5分钟快速上手
 
@@ -95,7 +95,7 @@ python declaration-manager.py update-file --file src/main.go
 
 **Q: 找不到 contextgen 可执行文件**
 ```bash
-# 确保 CodeCartographer 已构建
+# 确保 code-outline 已构建
 cd ../../  # 回到项目根目录
 make build
 ```
@@ -144,7 +144,7 @@ python declaration-manager.py get-all --output analysis.json
 
 ## 🎉 完成！
 
-现在您已经掌握了 CodeCartographer 声明管理工具的基本用法。这个工具将帮助您：
+现在您已经掌握了 code-outline 声明管理工具的基本用法。这个工具将帮助您：
 
 - 🚀 快速了解项目结构
 - 📊 分析代码声明和依赖
