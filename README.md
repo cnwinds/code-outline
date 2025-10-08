@@ -237,90 +237,70 @@ go env CC
 
 #### 代码质量检查
 
-**安装 golangci-lint:**
+**安装 staticcheck:**
 
 ```bash
-# 方法一：使用官方安装脚本（推荐）
-curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.54.2
+# 使用 go install（推荐）
+go install honnef.co/go/tools/cmd/staticcheck@latest
 
-# 方法二：使用 go install
-go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
-
-# 方法三：使用包管理器
+# 或者使用包管理器
 # Windows (Chocolatey)
-choco install golangci-lint
+choco install staticcheck
 
 # macOS (Homebrew)
-brew install golangci-lint
+brew install staticcheck
 
 # Ubuntu/Debian
-sudo apt-get install golangci-lint
+sudo apt-get install staticcheck
 ```
 
 **运行代码质量检查:**
 
 ```bash
 # 运行所有检查
-golangci-lint run
+staticcheck ./...
 
-# 运行特定检查
-golangci-lint run --enable=gofmt,govet,ineffassign
+# 快速检查（忽略包注释）
+staticcheck -checks="all,-ST1000" ./...
 
-# 运行并显示详细信息
-golangci-lint run -v
+# 检查未使用代码
+staticcheck -checks=U1000 ./...
 
-# 运行并生成报告
-golangci-lint run --out-format=json > lint-report.json
+# 检查性能问题
+staticcheck -checks="S1000,S1001,S1002,S1003,S1004,S1005,S1006,S1007,S1008,S1009,S1010,S1011,S1012,S1016,S1017,S1018,S1019,S1020,S1021,S1023,S1024,S1025,S1028,S1029,S1030,S1031,S1032,S1033,S1034,S1035,S1036,S1037,S1038,S1039,S1040" ./...
 
-# 运行特定目录
-golangci-lint run ./internal/...
+# 检查特定目录
+staticcheck ./internal/...
 
-# 运行并修复可自动修复的问题
-golangci-lint run --fix
-```
-
-**Windows 环境下的 golangci-lint 使用**
-
-在Windows环境下，golangci-lint可能安装在特定路径下。如果遇到"命令未找到"错误，请使用完整路径：
-
-```bash
-# 使用完整路径运行（根据实际安装路径调整）
-C:\Users\Administrator\go\bin\windows_amd64\golangci-lint.exe run
-
-# 或者将golangci-lint添加到PATH环境变量中
-# 然后就可以直接使用：
-golangci-lint run
+# 生成 JSON 报告
+staticcheck -f json ./... > lint-report.json
 ```
 
 **验证安装和运行：**
 
 ```bash
-# 检查golangci-lint版本
-C:\Users\Administrator\go\bin\windows_amd64\golangci-lint.exe --version
+# 检查 staticcheck 版本
+staticcheck --version
 
 # 运行代码检查
-C:\Users\Administrator\go\bin\windows_amd64\golangci-lint.exe run --config .golangci-simple.yml ./internal/config ./internal/scanner
+staticcheck ./internal/config ./internal/scanner
 ```
 
+**使用 Makefile 命令：**
 
-**如果遇到兼容性问题，可以尝试以下解决方案：**
-
-1. **使用简化的配置**：
 ```bash
-# 使用简化配置运行
-golangci-lint run --config .golangci-simple.yml
-```
+# 快速检查
+make lint
 
-2. **使用基本的Go工具**：
-```bash
-# 使用Go内置的代码检查工具
-go vet ./...
-go fmt ./...
-go mod tidy
-```
+# 完整检查
+make lint-full
 
-3. **在CI环境中运行**：
-golangci-lint在Linux/macOS的CI环境中通常工作正常，建议在CI/CD管道中运行完整的代码质量检查。
+# 检查未使用代码
+make lint-unused
+
+# 检查性能问题
+make lint-performance
+```
 
 ### 项目结构
 

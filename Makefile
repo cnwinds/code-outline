@@ -127,26 +127,25 @@ lint-errors:
 .PHONY: lint-internal
 lint-internal:
 	@echo "🔍 检查 internal 目录..."
-	golangci-lint run --config .golangci-simple.yml ./internal/...
+	staticcheck -checks="all,-ST1000" ./internal/...
 
 # 代码检查（生成报告）
 .PHONY: lint-report
 lint-report:
 	@echo "📊 生成代码检查报告..."
-	golangci-lint run --config .golangci-simple.yml --out-format=json > lint-report.json
+	staticcheck -checks="all,-ST1000" -f json ./... > lint-report.json
 	@echo "✅ 报告已生成: lint-report.json"
 
-# 安装 golangci-lint
+# 安装 staticcheck
 .PHONY: install-lint
 install-lint:
-	@echo "📦 安装 golangci-lint..."
-	@if command -v golangci-lint >/dev/null 2>&1; then \
-		echo "✅ golangci-lint 已安装"; \
+	@echo "📦 安装 staticcheck..."
+	@if command -v staticcheck >/dev/null 2>&1; then \
+		echo "✅ staticcheck 已安装"; \
 	else \
-		echo "正在安装 golangci-lint..."; \
-		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.54.2; \
-		echo "✅ golangci-lint 安装完成"; \
-		echo "注意：在Windows环境下，golangci-lint可能安装在 $$(go env GOPATH)/bin/windows_amd64/ 目录下"; \
+		echo "正在安装 staticcheck..."; \
+		go install honnef.co/go/tools/cmd/staticcheck@latest; \
+		echo "✅ staticcheck 安装完成"; \
 	fi
 
 
@@ -208,7 +207,7 @@ help:
 	@echo "  lint-fix     - 运行代码检查并自动修复"
 	@echo "  lint-internal- 检查 internal 目录"
 	@echo "  lint-report  - 生成代码检查报告"
-	@echo "  install-lint - 安装 golangci-lint"
+	@echo "  install-lint - 安装 staticcheck"
 	@echo "  tidy         - 整理依赖"
 	@echo "  clean        - 清理构建文件"
 	@echo "  install      - 安装到系统"
