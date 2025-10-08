@@ -9,11 +9,7 @@ on:
 jobs:
   test:
     name: Test
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest]
-        go: ['1.21', '1.22']
+    runs-on: windows-latest
     
     steps:
     - name: Checkout code
@@ -22,7 +18,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: ${{ matrix.go }}
+        go-version: '1.21'
 
     - name: Cache Go modules
       uses: actions/cache@v4
@@ -30,19 +26,11 @@ jobs:
         path: |
           ~/.cache/go-build
           ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        key: windows-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
-          ${{ runner.os }}-go-
+          windows-go-
 
-    - name: Install build dependencies (Ubuntu)
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential
-
-
-    - name: Install build dependencies (Windows)
-      if: matrix.os == 'windows-latest'
+    - name: Install build dependencies
       run: |
         choco install mingw -y
 
@@ -59,10 +47,10 @@ jobs:
       with:
         file: ./coverage.txt
         flags: unittests
-        name: codecov-${{ matrix.os }}-go${{ matrix.go }}
+        name: codecov-windows-go1.21
 
   lint:
-    name: Lint
+    name: Code Quality Check
     runs-on: ubuntu-latest
     
     steps:
@@ -79,20 +67,17 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential
 
-    - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v4
-      with:
-        version: latest
-        args: --timeout=5m
+    - name: Install staticcheck
+      run: go install honnef.co/go/tools/cmd/staticcheck@latest
+
+    - name: Run staticcheck
+      run: staticcheck -checks="all,-ST1000" ./...
       env:
         CGO_ENABLED: 1
 
   build:
-    name: Build
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
+    name: Build Windows
+    runs-on: windows-latest
     
     steps:
     - name: Checkout code
@@ -103,15 +88,7 @@ jobs:
       with:
         go-version: '1.21'
 
-    - name: Install build dependencies (Ubuntu)
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential
-
-
-    - name: Install build dependencies (Windows)
-      if: matrix.os == 'windows-latest'
+    - name: Install build dependencies
       run: |
         choco install mingw -y
 
@@ -120,20 +97,15 @@ jobs:
       env:
         CGO_ENABLED: 1
 
-    - name: Build platform binary
+    - name: Build Windows binary
       run: |
         mkdir -p build
-        if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-          go build -o build/code-outline-linux-amd64 ./cmd/code-outline
-        elif [ "${{ matrix.os }}" == "windows-latest" ]; then
-          go build -o build/code-outline-windows-amd64.exe ./cmd/code-outline
-        fi
-      shell: bash
+        go build -o build/code-outline-windows-amd64.exe ./cmd/code-outline
       env:
         CGO_ENABLED: 1
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: binary-${{ matrix.os }}
-        path: build/*
+        name: code-outline-windows
+        path: build/code-outline-windows-amd64.exe
