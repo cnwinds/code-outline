@@ -135,7 +135,7 @@ tidy:
 clean:
 	@echo "🧽 清理构建文件..."
 	rm -rf ${BUILD_DIR}
-	rm -f project_context.json
+	rm -f code-outline.json
 
 # 安装到系统
 .PHONY: install

@@ -47,8 +47,7 @@ class SpecKitInstaller:
             
             # 复制工具文件
             tools_to_copy = [
-                "declaration-manager.py",
-                "cursor-spec-kit.json"
+                "cursor-code-outline.json"
             ]
             
             for tool in tools_to_copy:
@@ -78,27 +77,8 @@ class SpecKitInstaller:
     
     def _create_launcher_scripts(self, tools_dir: Path):
         """创建启动脚本"""
-        if self.system == "windows":
-            # Windows 批处理脚本
-            launcher_content = """@echo off
-cd /d "%~dp0"
-python declaration-manager.py %*
-"""
-            launcher_file = tools_dir / "declaration-manager.bat"
-            with open(launcher_file, 'w', encoding='utf-8') as f:
-                f.write(launcher_content)
-            print("✅ 已创建 Windows 启动脚本")
-        else:
-            # Unix shell 脚本
-            launcher_content = """#!/bin/bash
-cd "$(dirname "$0")"
-python3 declaration-manager.py "$@"
-"""
-            launcher_file = tools_dir / "declaration-manager.sh"
-            with open(launcher_file, 'w', encoding='utf-8') as f:
-                f.write(launcher_content)
-            launcher_file.chmod(0o755)
-            print("✅ 已创建 Unix 启动脚本")
+        # 不再需要创建启动脚本，因为工具直接通过 Cursor 的 External Tools 功能调用
+        print("✅ 工具配置已准备就绪")
     
     def _update_cursor_config(self):
         """更新 Cursor 配置"""
@@ -116,7 +96,7 @@ python3 declaration-manager.py "$@"
                 config["externalTools"] = {}
             
             # 读取工具配置
-            tools_config_file = self.tools_dir / "cursor-spec-kit.json"
+            tools_config_file = self.tools_dir / "cursor-code-outline.json"
             if tools_config_file.exists():
                 with open(tools_config_file, 'r', encoding='utf-8') as f:
                     tools_config = json.load(f)
@@ -149,10 +129,7 @@ python3 declaration-manager.py "$@"
             if external_tools_dir.exists():
                 # 删除工具文件
                 tools_to_remove = [
-                    "declaration-manager.py",
-                    "declaration-manager.bat",
-                    "declaration-manager.sh",
-                    "cursor-spec-kit.json"
+                    "cursor-code-outline.json"
                 ]
                 
                 for tool in tools_to_remove:
@@ -178,9 +155,9 @@ python3 declaration-manager.py "$@"
     def check_installation(self) -> bool:
         """检查安装状态"""
         external_tools_dir = self.cursor_config_dir / "externalTools"
-        declaration_manager = external_tools_dir / "declaration-manager.py"
+        config_file = external_tools_dir / "cursor-code-outline.json"
         
-        if declaration_manager.exists():
+        if config_file.exists():
             print("✅ 工具已安装")
             return True
         else:

@@ -1,0 +1,72 @@
+{
+  "name": "cursor-code-outline",
+  "version": "2.0.0",
+  "description": "智能项目上下文生成、更新和查询工具集，为LLM提供完整的项目理解能力",
+  "tools": [
+    {
+      "name": "generate-project-context",
+      "displayName": "生成项目上下文",
+      "description": "首次使用或需要完整项目上下文时使用。生成整个项目的结构、文件和方法定义，创建code-outline.json文件。适用于：新项目分析、完整重构、架构理解。",
+      "command": "build/code-outline.exe",
+      "args": ["generate", "--path", "${workspaceFolder}"],
+      "cwd": "${workspaceFolder}",
+      "output": "code-outline.json",
+      "category": "项目初始化",
+      "when_to_use": "首次使用、完整项目分析、架构重构时"
+    },
+    {
+      "name": "update-project-context",
+      "displayName": "更新项目上下文",
+      "description": "当文件发生变化后使用。增量更新code-outline.json，只重新解析已修改的文件。适用于：文件修改后的上下文更新、保持项目状态同步。",
+      "command": "build/code-outline.exe",
+      "args": ["update", "--path", "${workspaceFolder}"],
+      "cwd": "${workspaceFolder}",
+      "output": "code-outline.json",
+      "category": "增量更新",
+      "when_to_use": "文件修改后、需要保持上下文最新时"
+    },
+    {
+      "name": "query-specific-files",
+      "displayName": "查询特定文件",
+      "description": "需要了解特定文件结构时使用。查询指定文件的方法、类、函数定义。支持多文件查询，一次返回多个文件内容。适用于：代码审查、特定模块分析、函数调用关系理解。",
+      "command": "build/code-outline.exe",
+      "args": ["query", "--files", "${input:fileList}", "--path", "${workspaceFolder}"],
+      "cwd": "${workspaceFolder}",
+      "output": "query_result.json",
+      "category": "精确查询",
+      "when_to_use": "需要了解特定文件结构、分析函数关系、代码审查时"
+    },
+    {
+      "name": "query-directory-structure",
+      "displayName": "查询目录结构",
+      "description": "需要了解特定目录结构时使用。查询指定目录下所有文件的方法和类定义。适用于：模块分析、目录结构理解、相关文件批量分析。",
+      "command": "build/code-outline.exe",
+      "args": ["query", "--dirs", "${input:directoryList}", "--path", "${workspaceFolder}"],
+      "cwd": "${workspaceFolder}",
+      "output": "directory_query_result.json",
+      "category": "目录查询",
+      "when_to_use": "分析特定模块、理解目录结构、批量文件分析时"
+    }
+  ],
+  "settings": {
+    "contextgen_path": "build/code-outline.exe",
+    "exclude_patterns": ["node_modules", "vendor", ".git", "build", "dist", "*.test.js", "*.spec.js"],
+    "supported_languages": ["go", "javascript", "typescript", "python", "java", "csharp", "rust", "cpp", "c"],
+    "output_format": "json",
+    "max_file_size": "10MB",
+    "timeout": 60,
+    "auto_update": true,
+    "smart_workflow": {
+      "initial_analysis": "generate-project-context",
+      "file_change_detection": "update-project-context", 
+      "specific_analysis": "query-specific-files",
+      "module_analysis": "query-directory-structure"
+    },
+    "usage_guidelines": {
+      "first_time": "使用 generate-project-context 生成完整项目上下文，创建 code-outline.json 文件",
+      "after_changes": "使用 update-project-context 更新已修改的文件，保持 code-outline.json 最新",
+      "need_specific_info": "使用 query-specific-files 查询特定文件结构",
+      "need_module_info": "使用 query-directory-structure 查询目录结构"
+    }
+  }
+}

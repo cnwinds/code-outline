@@ -46,7 +46,7 @@ Thumbs.db
 *.temp
 
 # 项目上下文输出文件
-project_context.json
+code-outline.json
 example_context.json
 
 # Tree-sitter 语法文件

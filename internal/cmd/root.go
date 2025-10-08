@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -23,7 +22,6 @@ import (
 var (
 	projectPath string
 	outputPath  string
-	configPath  string
 	excludeDirs string
 	updateFiles string
 	updateDirs  string
@@ -36,7 +34,7 @@ var rootCmd = &cobra.Command{
 	Use:   "contextgen",
 	Short: "code-outline - 通用型项目上下文生成器",
 	Long: `code-outline 是一个高性能、跨平台的命令行工具，
-用于通过静态分析为任何复杂的代码仓库生成统一、简洁且信息丰富的 project_context.json 文件。
+用于通过静态分析为任何复杂的代码仓库生成统一、简洁且信息丰富的 code-outline.json 文件。
 
 此文件将作为大语言模型（LLM）的"全局上下文记忆"，使其能够以前所未有的
 准确性和深度来理解项目架构，从而提升代码生成、需求变更、重构和调试等任务的表现。`,
@@ -46,7 +44,7 @@ var rootCmd = &cobra.Command{
 var generateCmd = &cobra.Command{
 	Use:   "generate",
 	Short: "生成项目上下文文件",
-	Long:  `扫描指定项目目录，解析代码文件，并生成 project_context.json 文件。`,
+	Long:  `扫描指定项目目录，解析代码文件，并生成 code-outline.json 文件。`,
 	RunE:  runGenerate,
 }
 
@@ -54,45 +52,42 @@ var generateCmd = &cobra.Command{
 var updateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "增量更新项目上下文文件",
-	Long:  `检测文件变更并增量更新现有的 project_context.json 文件，只重新解析已修改的文件。`,
+	Long:  `检测文件变更并增量更新现有的 code-outline.json 文件，只重新解析已修改的文件。`,
 	RunE:  runUpdate,
 }
 
-// dataCmd 数据获取命令
-var dataCmd = &cobra.Command{
-	Use:   "data",
-	Short: "获取文件和方法的定义数据",
-	Long:  `获取指定文件或目录中的所有文件和方法定义，返回JSON格式的数据。`,
-	RunE:  runData,
+// queryCmd 查询命令
+var queryCmd = &cobra.Command{
+	Use:   "query",
+	Short: "查询文件和方法的定义数据",
+	Long:  `查询指定文件或目录中的所有文件和方法定义，返回JSON格式的数据。`,
+	RunE:  runQuery,
 }
 
 func init() {
 	// 添加子命令
 	rootCmd.AddCommand(generateCmd)
 	rootCmd.AddCommand(updateCmd)
-	rootCmd.AddCommand(dataCmd)
+	rootCmd.AddCommand(queryCmd)
 
 	// 添加generate命令行参数
 	generateCmd.Flags().StringVarP(&projectPath, "path", "p", ".", "项目路径")
-	generateCmd.Flags().StringVarP(&outputPath, "output", "o", "project_context.json", "输出文件路径")
-	generateCmd.Flags().StringVarP(&configPath, "config", "c", "", "语言配置文件路径")
+	generateCmd.Flags().StringVarP(&outputPath, "output", "o", "code-outline.json", "输出文件路径")
 	generateCmd.Flags().StringVarP(&excludeDirs, "exclude", "e", "", "要排除的目录或文件模式，用逗号分隔")
 
 	// 添加update命令行参数
 	updateCmd.Flags().StringVarP(&projectPath, "path", "p", ".", "项目路径")
-	updateCmd.Flags().StringVarP(&outputPath, "output", "o", "project_context.json", "输出文件路径")
-	updateCmd.Flags().StringVarP(&configPath, "config", "c", "", "语言配置文件路径")
+	updateCmd.Flags().StringVarP(&outputPath, "output", "o", "code-outline.json", "输出文件路径")
 	updateCmd.Flags().StringVarP(&excludeDirs, "exclude", "e", "", "要排除的目录或文件模式，用逗号分隔")
 	updateCmd.Flags().StringVarP(&updateFiles, "files", "f", "", "指定要更新的文件，用逗号分隔（如：file1.go,file2.js）")
 	updateCmd.Flags().StringVarP(&updateDirs, "dirs", "d", "", "指定要更新的目录，用逗号分隔（如：src/,internal/）")
 
-	// 添加data命令行参数
-	dataCmd.Flags().StringVarP(&projectPath, "path", "p", ".", "项目路径")
-	dataCmd.Flags().StringVarP(&outputPath, "output", "o", "", "输出文件路径（如果不指定则输出到标准输出）")
-	dataCmd.Flags().StringVarP(&configPath, "config", "c", "", "语言配置文件路径")
-	dataCmd.Flags().StringVarP(&excludeDirs, "exclude", "e", "", "要排除的目录或文件模式，用逗号分隔")
-	dataCmd.Flags().StringVarP(&dataFiles, "files", "f", "", "指定要获取数据的文件，用逗号分隔（如：file1.go,file2.js）")
-	dataCmd.Flags().StringVarP(&dataDirs, "dirs", "d", "", "指定要获取数据的目录，用逗号分隔（如：src/,internal/）")
+	// 添加query命令行参数
+	queryCmd.Flags().StringVarP(&projectPath, "path", "p", ".", "项目路径")
+	queryCmd.Flags().StringVarP(&outputPath, "output", "o", "", "输出文件路径（如果不指定则输出到标准输出）")
+	queryCmd.Flags().StringVarP(&excludeDirs, "exclude", "e", "", "要排除的目录或文件模式，用逗号分隔")
+	queryCmd.Flags().StringVarP(&dataFiles, "files", "f", "", "指定要查询的文件，用逗号分隔（如：file1.go,file2.js）")
+	queryCmd.Flags().StringVarP(&dataDirs, "dirs", "d", "", "指定要查询的目录，用逗号分隔（如：src/,internal/）")
 }
 
 // Execute 执行根命令
@@ -118,10 +113,7 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 
 	// 1. 加载语言配置
 	fmt.Println("📋 加载语言配置...")
-	languagesConfig, err := config.LoadLanguagesConfig(configPath)
-	if err != nil {
-		return fmt.Errorf("加载语言配置失败: %w", err)
-	}
+	languagesConfig := config.GetDefaultLanguagesConfig()
 	fmt.Printf("✅ 已加载 %d 种语言的配置\n", len(languagesConfig))
 
 	// 2. 创建解析器
@@ -239,32 +231,53 @@ func saveProjectContext(context *models.ProjectContext, outputPath string) error
 
 // formatJSONCompact 格式化JSON，保持range数组在一行，过滤空的purpose字段
 func formatJSONCompact(data []byte) ([]byte, error) {
+	// 解析JSON数据
+	var jsonData interface{}
+	if err := json.Unmarshal(data, &jsonData); err != nil {
+		return nil, err
+	}
+
+	// 过滤空的purpose字段
+	jsonData = filterEmptyPurposeFields(jsonData)
+
 	// 使用MarshalIndent格式化JSON
-	formatted, err := json.MarshalIndent(json.RawMessage(data), "", "  ")
+	formatted, err := json.MarshalIndent(jsonData, "", "  ")
 	if err != nil {
 		return nil, err
 	}
 
-	// 1. 将range数组格式化为单行
+	// 将range数组格式化为单行
 	rangePattern := regexp.MustCompile(`"range": \[\s*\n\s*(\d+),\s*\n\s*(\d+)\s*\n\s*\]`)
 	formatted = rangePattern.ReplaceAll(formatted, []byte(`"range": [$1, $2]`))
 
-	// 2. 删除空的purpose字段
-	emptyPurposePattern := regexp.MustCompile(`\s*"purpose":\s*"",?\s*\n`)
-	formatted = emptyPurposePattern.ReplaceAll(formatted, []byte(""))
-
-	// 3. 修复删除purpose后的缩进问题
-	formatted = bytes.ReplaceAll(formatted, []byte(",\n                            \"range\":"), []byte(",\n          \"range\":"))
-
-	// 4. 修复prototype和range在同一行的情况
-	prototypeRangePattern := regexp.MustCompile(`"prototype":\s*"([^"]*)",\s*"range":`)
-	formatted = prototypeRangePattern.ReplaceAll(formatted, []byte(`"prototype": "$1",`+"\n          "+`"range":`))
-
-	// 5. 修复range缩进不正确的情况
-	rangeIndentPattern := regexp.MustCompile(`(\n\s{10})"range":`)
-	formatted = rangeIndentPattern.ReplaceAll(formatted, []byte(`$1  "range":`))
-
 	return formatted, nil
+}
+
+// filterEmptyPurposeFields 递归过滤空的purpose字段
+func filterEmptyPurposeFields(data interface{}) interface{} {
+	switch v := data.(type) {
+	case map[string]interface{}:
+		result := make(map[string]interface{})
+		for key, value := range v {
+			// 跳过空的purpose字段
+			if key == "purpose" {
+				if str, ok := value.(string); ok && str == "" {
+					continue
+				}
+			}
+			// 递归处理嵌套结构
+			result[key] = filterEmptyPurposeFields(value)
+		}
+		return result
+	case []interface{}:
+		result := make([]interface{}, 0, len(v))
+		for _, item := range v {
+			result = append(result, filterEmptyPurposeFields(item))
+		}
+		return result
+	default:
+		return v
+	}
 }
 
 // runUpdate 执行更新命令
@@ -272,10 +285,7 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 	fmt.Println("🔄 开始增量更新项目上下文...")
 
 	// 1. 加载语言配置
-	languagesConfig, err := config.LoadLanguagesConfig(configPath)
-	if err != nil {
-		return fmt.Errorf("加载语言配置失败: %w", err)
-	}
+	languagesConfig := config.GetDefaultLanguagesConfig()
 
 	// 2. 创建解析器
 	fmt.Println("🌳 使用 Tree-sitter 解析器")
@@ -396,37 +406,25 @@ func printUpdateStatistics(context *models.ProjectContext, changes []updater.Fil
 	fmt.Printf("  ⏰ 最后更新: %s\n", context.LastUpdated.Format("2006-01-02 15:04:05"))
 }
 
-// runData 执行数据获取命令
-func runData(cmd *cobra.Command, args []string) error {
-	fmt.Println("📊 开始获取文件和方法的定义数据...")
+// runQuery 执行查询命令
+func runQuery(cmd *cobra.Command, args []string) error {
+	fmt.Println("🔍 开始查询文件和方法的定义数据...")
 
-	// 1. 加载语言配置
-	fmt.Println("📋 加载语言配置...")
-	languagesConfig, err := config.LoadLanguagesConfig(configPath)
+	// 1. 检查是否存在 code-outline.json 文件
+	contextFile := filepath.Join(projectPath, "code-outline.json")
+	if _, err := os.Stat(contextFile); os.IsNotExist(err) {
+		return fmt.Errorf("未找到 code-outline.json 文件，请先运行 generate 命令生成项目上下文")
+	}
+
+	// 2. 加载项目上下文文件
+	fmt.Println("📂 加载项目上下文文件...")
+	context, err := loadProjectContext(contextFile)
 	if err != nil {
-		return fmt.Errorf("加载语言配置失败: %w", err)
+		return fmt.Errorf("加载项目上下文失败: %w", err)
 	}
-	fmt.Printf("✅ 已加载 %d 种语言的配置\n", len(languagesConfig))
+	fmt.Printf("✅ 已加载项目上下文: %s\n", context.ProjectName)
 
-	// 2. 创建解析器
-	fmt.Println("🔧 初始化解析器...")
-	fmt.Println("🌳 使用 Tree-sitter 解析器")
-	treeSitterParser, err := parser.NewTreeSitterParser(languagesConfig)
-	if err != nil {
-		return fmt.Errorf("tree-sitter 解析器初始化失败: %w", err)
-	}
-	codeParser := treeSitterParser
-
-	// 3. 解析排除模式
-	var excludePatterns []string
-	if excludeDirs != "" {
-		excludePatterns = strings.Split(excludeDirs, ",")
-		for i, pattern := range excludePatterns {
-			excludePatterns[i] = strings.TrimSpace(pattern)
-		}
-	}
-
-	// 4. 解析目标文件和目录
+	// 3. 解析目标文件和目录
 	var targetFiles []string
 	var targetDirs []string
 
@@ -450,14 +448,14 @@ func runData(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// 5. 获取数据
-	fmt.Println("🔍 扫描并解析文件...")
-	dataResult, err := getDataFromTargets(codeParser, projectPath, excludePatterns, targetFiles, targetDirs)
+	// 4. 从上下文中提取数据
+	fmt.Println("🔍 从项目上下文中提取数据...")
+	dataResult, err := extractDataFromContext(context, targetFiles, targetDirs)
 	if err != nil {
-		return fmt.Errorf("获取数据失败: %w", err)
+		return fmt.Errorf("提取数据失败: %w", err)
 	}
 
-	// 6. 输出结果
+	// 5. 输出结果
 	if outputPath != "" {
 		fmt.Printf("💾 保存数据到文件: %s\n", outputPath)
 		err = saveDataToFile(dataResult, outputPath)
@@ -481,10 +479,10 @@ func runData(cmd *cobra.Command, args []string) error {
 		fmt.Println(string(jsonData))
 	}
 
-	// 7. 显示统计信息
+	// 6. 显示统计信息
 	printDataStatistics(dataResult)
 
-	fmt.Println("🎉 数据获取完成!")
+	fmt.Println("🎉 查询完成!")
 	return nil
 }
 
@@ -795,4 +793,106 @@ func parseTargetPaths(targetPaths []string, projectPath string) []string {
 	}
 
 	return resolvedPaths
+}
+
+// loadProjectContext 加载项目上下文文件
+func loadProjectContext(filePath string) (*models.ProjectContext, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var context models.ProjectContext
+	err = json.Unmarshal(data, &context)
+	if err != nil {
+		return nil, err
+	}
+
+	return &context, nil
+}
+
+// extractDataFromContext 从项目上下文中提取指定文件或目录的数据
+func extractDataFromContext(context *models.ProjectContext, targetFiles, targetDirs []string) (*DataResult, error) {
+	result := &DataResult{
+		Files: make(map[string]models.FileInfo),
+		Stats: DataStats{
+			TotalFiles:   0,
+			TotalSymbols: 0,
+			Languages:    []string{},
+		},
+	}
+
+	// 用于统计语言的map
+	languageCount := make(map[string]int)
+
+	// 如果没有指定目标，返回所有文件
+	if len(targetFiles) == 0 && len(targetDirs) == 0 {
+		for filePath, fileInfo := range context.Files {
+			result.Files[filePath] = fileInfo
+			result.Stats.TotalFiles++
+			result.Stats.TotalSymbols += len(fileInfo.Symbols)
+
+			// 统计语言
+			ext := filepath.Ext(filePath)
+			if ext != "" {
+				ext = ext[1:] // 移除点号
+				languageCount[ext]++
+			}
+		}
+	} else {
+		// 处理指定的文件
+		for _, targetFile := range targetFiles {
+			// 标准化文件路径
+			normalizedFile := normalizePath(targetFile)
+
+			// 查找匹配的文件
+			for filePath, fileInfo := range context.Files {
+				if strings.Contains(filePath, normalizedFile) || filepath.Base(filePath) == filepath.Base(normalizedFile) {
+					result.Files[filePath] = fileInfo
+					result.Stats.TotalFiles++
+					result.Stats.TotalSymbols += len(fileInfo.Symbols)
+
+					// 统计语言
+					ext := filepath.Ext(filePath)
+					if ext != "" {
+						ext = ext[1:] // 移除点号
+						languageCount[ext]++
+					}
+				}
+			}
+		}
+
+		// 处理指定的目录
+		for _, targetDir := range targetDirs {
+			// 标准化目录路径
+			normalizedDir := normalizePath(targetDir)
+
+			// 查找匹配目录下的文件
+			for filePath, fileInfo := range context.Files {
+				fileDir := filepath.Dir(filePath)
+				if strings.HasPrefix(fileDir, normalizedDir) || strings.Contains(filePath, normalizedDir) {
+					// 避免重复添加
+					if _, exists := result.Files[filePath]; !exists {
+						result.Files[filePath] = fileInfo
+						result.Stats.TotalFiles++
+						result.Stats.TotalSymbols += len(fileInfo.Symbols)
+
+						// 统计语言
+						ext := filepath.Ext(filePath)
+						if ext != "" {
+							ext = ext[1:] // 移除点号
+							languageCount[ext]++
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// 将语言统计转换为切片
+	for lang := range languageCount {
+		result.Stats.Languages = append(result.Stats.Languages, lang)
+	}
+
+	return result, nil
 }

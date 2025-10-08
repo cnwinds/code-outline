@@ -30,13 +30,13 @@
 
 ```bash
 # 安装到 Cursor
-python install-spec-kit.py install
+python install-code-outline.py install
 
 # 检查安装状态
-python install-spec-kit.py check
+python install-code-outline.py check
 
 # 卸载工具
-python install-spec-kit.py uninstall
+python install-code-outline.py uninstall
 ```
 
 ### 基本使用
@@ -44,9 +44,6 @@ python install-spec-kit.py uninstall
 #### 1. 获取所有文件声明
 
 ```bash
-# 命令行使用
-python declaration-manager-simple.py get-all --path /path/to/project
-
 # 在 Cursor 中使用
 # 按 Ctrl+Shift+P，选择 "获取所有文件声明"
 ```
@@ -54,9 +51,6 @@ python declaration-manager-simple.py get-all --path /path/to/project
 #### 2. 获取指定文件声明
 
 ```bash
-# 命令行使用
-python declaration-manager-simple.py get-file --path /path/to/project --file src/main.go
-
 # 在 Cursor 中使用
 # 右键文件，选择 "获取文件声明"
 ```
@@ -64,9 +58,6 @@ python declaration-manager-simple.py get-file --path /path/to/project --file src
 #### 3. 创建项目声明文件
 
 ```bash
-# 命令行使用
-python declaration-manager-simple.py create-project --path /path/to/project
-
 # 在 Cursor 中使用
 # 按 Ctrl+Shift+P，选择 "创建项目声明"
 ```
@@ -74,9 +65,6 @@ python declaration-manager-simple.py create-project --path /path/to/project
 #### 4. 更新文件声明
 
 ```bash
-# 命令行使用
-python declaration-manager-simple.py update-file --path /path/to/project --file src/main.go
-
 # 在 Cursor 中使用
 # 右键文件，选择 "更新文件声明"
 ```
@@ -256,7 +244,7 @@ python declaration-manager.py get-all --no-cache
 ```bash
 # 确保有写入权限
 chmod +x declaration-manager.py
-chmod +x install-spec-kit.py
+chmod +x install-code-outline.py
 ```
 
 ### 调试模式
@@ -266,7 +254,7 @@ chmod +x install-spec-kit.py
 python declaration-manager.py get-all --verbose
 
 # 检查安装状态
-python install-spec-kit.py check
+python install-code-outline.py check
 ```
 
 ## 🤝 贡献

@@ -9,10 +9,10 @@
 cd cursor-integration
 
 # 安装到 Cursor
-python install-spec-kit.py install
+python install-code-outline.py install
 
 # 检查安装状态
-python install-spec-kit.py check
+python install-code-outline.py check
 ```
 
 ### 2. 重启 Cursor
@@ -35,17 +35,8 @@ python install-spec-kit.py check
 #### 方法二：命令行使用
 
 ```bash
-# 获取所有文件声明
-python declaration-manager-simple.py get-all --path /path/to/your/project
-
-# 获取指定文件声明
-python declaration-manager-simple.py get-file --path /path/to/your/project --file src/main.go
-
-# 创建项目声明文件
-python declaration-manager-simple.py create-project --path /path/to/your/project
-
-# 更新文件声明
-python declaration-manager-simple.py update-file --path /path/to/your/project --file src/main.go
+# 所有操作都通过 Cursor 的 External Tools 功能进行
+# 按 Ctrl+Shift+P，然后选择相应的工具
 ```
 
 ## 📊 输出文件说明
@@ -60,28 +51,16 @@ python declaration-manager-simple.py update-file --path /path/to/your/project --
 ## 🎯 使用场景
 
 ### 1. 新项目分析
-```bash
-# 快速了解新项目结构
-python declaration-manager.py create-project
-```
+在 Cursor 中按 `Ctrl+Shift+P`，选择 "生成项目上下文"
 
 ### 2. 代码审查
-```bash
-# 获取特定文件的详细信息
-python declaration-manager.py get-file --file src/api.go
-```
+在 Cursor 中按 `Ctrl+Shift+P`，选择 "查询特定文件"
 
 ### 3. 项目文档生成
-```bash
-# 生成完整的项目声明文档
-python declaration-manager.py create-project --output project_docs.json
-```
+在 Cursor 中按 `Ctrl+Shift+P`，选择 "生成项目上下文"
 
 ### 4. 增量更新
-```bash
-# 更新修改过的文件
-python declaration-manager.py update-file --file src/main.go
-```
+在 Cursor 中按 `Ctrl+Shift+P`，选择 "更新项目上下文"
 
 ## ⚡ 性能提示
 
@@ -104,14 +83,14 @@ make build
 ```bash
 # 给脚本执行权限
 chmod +x declaration-manager.py
-chmod +x install-spec-kit.py
+chmod +x install-code-outline.py
 ```
 
 **Q: Cursor 中找不到工具**
 ```bash
 # 重新安装
-python install-spec-kit.py uninstall
-python install-spec-kit.py install
+python install-code-outline.py uninstall
+python install-code-outline.py install
 # 然后重启 Cursor
 ```
 

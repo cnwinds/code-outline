@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg)]()
 
-**code-outline** 是一个高性能、跨平台的命令行工具，用于通过静态分析为任何复杂的代码仓库生成统一、简洁且信息丰富的 `project_context.json` 文件。此文件将作为大语言模型（LLM）的"全局上下文记忆"，使其能够以前所未有的准确性和深度来理解项目架构。
+**code-outline** 是一个高性能、跨平台的命令行工具，用于通过静态分析为任何复杂的代码仓库生成统一、简洁且信息丰富的 `code-outline.json` 文件。此文件将作为大语言模型（LLM）的"全局上下文记忆"，使其能够以前所未有的准确性和深度来理解项目架构。
 
 ## ✨ 特性
 
@@ -68,17 +68,17 @@ make run
 # 同时更新指定文件和目录
 ./build/contextgen update --files "main.go" --dirs "internal/"
 
-# 获取所有文件和方法定义
-./build/contextgen data
+# 查询所有文件和方法定义
+./build/contextgen query
 
-# 获取指定文件的数据
-./build/contextgen data --files "main.go,config.go"
+# 查询指定文件的数据
+./build/contextgen query --files "main.go,config.go"
 
-# 获取指定目录的数据
-./build/contextgen data --dirs "internal/,cmd/"
+# 查询指定目录的数据
+./build/contextgen query --dirs "internal/,cmd/"
 
-# 保存数据到文件
-./build/contextgen data --files "main.go" --output data.json
+# 保存查询结果到文件
+./build/contextgen query --files "main.go" --output data.json
 ```
 
 ## 📋 支持的语言
@@ -110,7 +110,7 @@ $ ./contextgen generate
 🔍 扫描项目: .
 ✅ 扫描完成，找到 6 个文件
 📦 构建项目上下文...
-💾 生成输出文件: project_context.json
+💾 生成输出文件: code-outline.json
 
 📊 统计信息:
   项目名称: code-outline
@@ -124,7 +124,7 @@ $ ./contextgen generate
 
 ## 📄 输出格式
 
-生成的 `project_context.json` 文件包含：
+生成的 `code-outline.json` 文件包含：
 
 ```json
 {
@@ -576,63 +576,63 @@ code-outline 支持增量更新模式，可以只更新指定的文件或目录�
 - **快速**: 大幅减少更新时间和资源消耗
 - **灵活**: 支持文件和目录的任意组合
 
-## 📊 数据获取模式
+## 🔍 查询模式
 
-code-outline 支持数据获取模式，可以获取指定文件或目录中的所有文件和方法定义，返回结构化的JSON数据：
+code-outline 支持查询模式，可以查询指定文件或目录中的所有文件和方法定义，返回结构化的JSON数据：
 
-### 基本数据获取命令
+### 基本查询命令
 
 ```bash
-# 获取所有文件和方法定义
-./build/contextgen data
+# 查询所有文件和方法定义
+./build/contextgen query
 
 # 指定项目路径
-./build/contextgen data --path /path/to/project
+./build/contextgen query --path /path/to/project
 
 # 输出到文件
-./build/contextgen data --output data.json
+./build/contextgen query --output data.json
 ```
 
-### 指定文件数据获取
+### 指定文件查询
 
 ```bash
-# 获取单个文件的数据
-./build/contextgen data --files "main.go"
+# 查询单个文件的数据
+./build/contextgen query --files "main.go"
 
-# 获取多个文件的数据
-./build/contextgen data --files "main.go,config.go,utils.go"
+# 查询多个文件的数据
+./build/contextgen query --files "main.go,config.go,utils.go"
 
-# 获取指定路径的文件数据
-./build/contextgen data --files "cmd/main.go,internal/config/config.go"
+# 查询指定路径的文件数据
+./build/contextgen query --files "cmd/main.go,internal/config/config.go"
 ```
 
-### 指定目录数据获取
+### 指定目录查询
 
 ```bash
-# 获取单个目录的数据
-./build/contextgen data --dirs "internal/"
+# 查询单个目录的数据
+./build/contextgen query --dirs "internal/"
 
-# 获取多个目录的数据
-./build/contextgen data --dirs "internal/,cmd/,pkg/"
+# 查询多个目录的数据
+./build/contextgen query --dirs "internal/,cmd/,pkg/"
 
-# 获取子目录的数据
-./build/contextgen data --dirs "internal/parser/,internal/scanner/"
+# 查询子目录的数据
+./build/contextgen query --dirs "internal/parser/,internal/scanner/"
 ```
 
-### 混合数据获取模式
+### 混合查询模式
 
 ```bash
-# 同时获取指定文件和目录的数据
-./build/contextgen data --files "main.go" --dirs "internal/"
+# 同时查询指定文件和目录的数据
+./build/contextgen query --files "main.go" --dirs "internal/"
 
 # 结合排除规则
-./build/contextgen data --files "main.go" --exclude "*.test.go"
+./build/contextgen query --files "main.go" --exclude "*.test.go"
 
 # 输出到标准输出（不指定output参数）
-./build/contextgen data --files "main.go"
+./build/contextgen query --files "main.go"
 ```
 
-### 数据获取模式的优势
+### 查询模式的优势
 
 - **结构化**: 返回标准化的JSON格式数据
 - **精确**: 可以指定特定的文件或目录
@@ -641,7 +641,7 @@ code-outline 支持数据获取模式，可以获取指定文件或目录中的�
 
 ### 输出格式
 
-数据获取模式返回的JSON格式包含：
+查询模式返回的JSON格式包含：
 
 ```json
 {
@@ -677,7 +677,7 @@ code-outline 支持数据获取模式，可以获取指定文件或目录中的�
 # 生成项目上下文
 ./contextgen generate --path ./my-project
 
-# 将 project_context.json 提供给 LLM
+# 将 code-outline.json 提供给 LLM
 # LLM 现在可以理解整个项目结构和代码架构
 ```
 
@@ -749,7 +749,7 @@ $env:CGO_ENABLED=1
 $env:CC="gcc"
 
 # 然后重新构建
-go build -o build/contextgen.exe ./cmd/contextgen
+go build -o build/code-outline.exe ./cmd/contextgen
 ```
 
 **Q: 扫描大项目时内存占用过高？**
