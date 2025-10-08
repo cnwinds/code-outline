@@ -38,7 +38,8 @@ jobs:
       run: go mod download
 
     - name: Run tests
-      run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+      run: |
+        go test -v -race -coverprofile="coverage.txt" -covermode=atomic ./...
       env:
         CGO_ENABLED: 1
 
@@ -93,14 +94,11 @@ jobs:
         choco install mingw -y
 
     - name: Build
-      run: go build -v ./cmd/code-outline
-      env:
-        CGO_ENABLED: 1
-
-    - name: Build Windows binary
       run: |
+        pwd
+        dir
         mkdir -p build
-        go build -o build/code-outline-windows-amd64.exe ./cmd/code-outline
+        go build -v -o build/code-outline.exe ./cmd/code-outline
       env:
         CGO_ENABLED: 1
 
