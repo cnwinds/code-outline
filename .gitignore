@@ -1,7 +1,5 @@
 # 二进制文件
-/build/
-code-outline
-code-outline.exe
+/build/*
 
 # Go 构建输出
 *.exe

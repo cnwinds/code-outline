@@ -106,4 +106,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: code-outline-windows
-        path: build/code-outline-windows-amd64.exe
+        path: build/code-outline.exe
