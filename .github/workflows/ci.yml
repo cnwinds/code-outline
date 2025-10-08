@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ master, main, develop ]
 
+# 设置工作流权限
+permissions:
+  contents: read
+  packages: read
+
 jobs:
   test:
     name: Test

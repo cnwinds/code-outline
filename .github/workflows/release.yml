@@ -5,6 +5,12 @@ on:
     tags:
       - 'v*'
 
+# 设置工作流权限
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
 jobs:
   build-and-release:
     name: Build and Release
