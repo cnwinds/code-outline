@@ -20,6 +20,16 @@
 
 ### 安装
 
+#### 方式一：下载预编译版本（推荐）
+
+从 [Releases](https://github.com/yourusername/code-outline/releases) 页面下载适合您系统的预编译版本：
+
+- **Windows**: `code-outline-windows-amd64.exe`
+- **Linux**: `code-outline-linux-amd64`
+- **macOS**: `code-outline-darwin-amd64`
+
+#### 方式二：从源码构建
+
 ```bash
 # 克隆仓库
 git clone https://github.com/yourusername/code-outline.git
@@ -30,6 +40,9 @@ make build
 
 # Windows 专用构建（64 位架构）
 make build-windows
+
+# 跨平台构建（所有平台）
+make build-all
 
 # 或者直接运行
 make run
@@ -564,6 +577,47 @@ code-outline 生成的上下文文件可以作为：
 - [ ] 云端服务
 - [ ] IDE 插件
 - [ ] 实时监控和更新
+
+## 🚀 自动发布
+
+### 创建 Release
+
+项目支持自动发布功能。当您推送以 `v` 开头的 tag 时，会自动触发 release 工作流：
+
+```bash
+# 创建带消息的 tag
+git tag -a v1.0.0 -m "发布版本 1.0.0
+
+## 新功能
+- 添加了新的解析器
+- 优化了性能
+- 修复了已知问题"
+
+# 推送 tag 触发自动发布
+git push origin v1.0.0
+```
+
+### 测试 Release 工作流
+
+使用提供的测试脚本：
+
+```bash
+# Linux/macOS
+./scripts/test-release.sh
+
+# Windows PowerShell
+.\scripts\test-release.ps1
+```
+
+### Release 内容
+
+自动生成的 release 将包含：
+
+- 📦 **Windows**: `code-outline-windows-amd64.exe`
+- 🐧 **Linux**: `code-outline-linux-amd64`  
+- 🍎 **macOS**: `code-outline-darwin-amd64`
+
+每个 release 都会自动生成下载链接和使用说明。
 
 ## 🛠️ 故障排除
 
