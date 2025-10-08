@@ -77,8 +77,21 @@ jobs:
         CGO_ENABLED: 1
 
   build:
-    name: Build Windows
-    runs-on: windows-latest
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+          - os: windows-latest
+            binary-name: code-outline-windows-amd64.exe
+            build-deps: choco install mingw -y
+          - os: ubuntu-latest
+            binary-name: code-outline-linux-amd64
+            build-deps: sudo apt-get update && sudo apt-get install -y build-essential
+          - os: macos-latest
+            binary-name: code-outline-darwin-amd64
+            build-deps: brew install gcc || true
     
     steps:
     - name: Checkout code
@@ -90,20 +103,17 @@ jobs:
         go-version: '1.21'
 
     - name: Install build dependencies
-      run: |
-        choco install mingw -y
+      run: ${{ matrix.build-deps }}
 
     - name: Build
       run: |
-        pwd
-        dir
         mkdir -p build
-        go build -v -o build/code-outline.exe ./cmd/code-outline
+        go build -v -o build/${{ matrix.binary-name }} ./cmd/code-outline
       env:
         CGO_ENABLED: 1
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: code-outline-windows
-        path: build/code-outline.exe
+        name: code-outline-${{ matrix.os }}
+        path: build/${{ matrix.binary-name }}
