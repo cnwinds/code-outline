@@ -1,8 +1,6 @@
 package config
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,60 +9,53 @@ import (
 	"github.com/cnwinds/code-outline/internal/models"
 )
 
-func TestLoadLanguagesConfig(t *testing.T) {
-	// 创建临时配置文件
-	tmpDir := t.TempDir()
-	configPath := filepath.Join(tmpDir, "test_languages.json")
-
-	// 写入测试配置
-
-	configData := `{
-		"go": {
-			"extensions": [".go"],
-			"queries": {
-				"top_level_symbols": ["(function_declaration) @symbol"]
-			}
-		}
-	}`
-
-	err := os.WriteFile(configPath, []byte(configData), 0600)
-	require.NoError(t, err)
-
-	// 测试加载配置
-	config, err := LoadLanguagesConfig(configPath)
-	require.NoError(t, err)
-	assert.NotNil(t, config)
-	assert.Contains(t, config, "go")
-}
-
-func TestLoadLanguagesConfigFileNotExist(t *testing.T) {
-	// 测试不存在的配置文件
-	tmpDir := t.TempDir()
-	configPath := filepath.Join(tmpDir, "nonexistent.json")
-
-	config, err := LoadLanguagesConfig(configPath)
-	require.NoError(t, err)
-	assert.NotNil(t, config)
-
-	// 验证默认配置被创建
+func TestGetDefaultLanguagesConfig(t *testing.T) {
+	// 测试获取默认语言配置
+	config := GetDefaultLanguagesConfig()
+	require.NotNil(t, config)
 	assert.Contains(t, config, "go")
 	assert.Contains(t, config, "javascript")
 	assert.Contains(t, config, "python")
+	assert.Contains(t, config, "java")
+	assert.Contains(t, config, "csharp")
+	assert.Contains(t, config, "cpp")
+	assert.Contains(t, config, "c")
+	assert.Contains(t, config, "rust")
+	assert.Contains(t, config, "typescript")
 }
 
-func TestLoadLanguagesConfigInvalidJSON(t *testing.T) {
-	// 创建无效的JSON文件
-	tmpDir := t.TempDir()
-	configPath := filepath.Join(tmpDir, "invalid.json")
+func TestGetDefaultLanguagesConfigContent(t *testing.T) {
+	// 测试默认配置的内容
+	config := GetDefaultLanguagesConfig()
 
-	invalidJSON := `{ invalid json }`
-	err := os.WriteFile(configPath, []byte(invalidJSON), 0600)
-	require.NoError(t, err)
+	// 验证Go配置
+	goConfig, exists := config["go"]
+	assert.True(t, exists)
+	assert.Equal(t, []string{".go"}, goConfig.Extensions)
 
-	// 测试加载无效配置
-	_, err = LoadLanguagesConfig(configPath)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "解析配置文件失败")
+	// 验证JavaScript配置
+	jsConfig, exists := config["javascript"]
+	assert.True(t, exists)
+	assert.Equal(t, []string{".js", ".jsx"}, jsConfig.Extensions)
+
+	// 验证Python配置
+	pyConfig, exists := config["python"]
+	assert.True(t, exists)
+	assert.Equal(t, []string{".py"}, pyConfig.Extensions)
+}
+
+func TestGetDefaultLanguagesConfigAllLanguages(t *testing.T) {
+	// 测试所有支持的语言都被包含
+	config := GetDefaultLanguagesConfig()
+
+	expectedLanguages := []string{
+		"go", "java", "csharp", "cpp", "c", "rust",
+		"javascript", "typescript", "python",
+	}
+
+	for _, lang := range expectedLanguages {
+		assert.Contains(t, config, lang, "语言 %s 应该被包含在默认配置中", lang)
+	}
 }
 
 func TestGetLanguageByExtension(t *testing.T) {
@@ -94,47 +85,34 @@ func TestGetLanguageByExtension(t *testing.T) {
 	assert.Equal(t, []string{".js", ".jsx"}, langConfig.Extensions)
 }
 
-func TestCreateDefaultLanguagesConfig(t *testing.T) {
-	tmpDir := t.TempDir()
-	configPath := filepath.Join(tmpDir, "default_languages.json")
+func TestGetDefaultLanguagesConfigExtensions(t *testing.T) {
+	// 测试各种语言的扩展名配置
+	config := GetDefaultLanguagesConfig()
 
-	config, err := createDefaultLanguagesConfig(configPath)
-	require.NoError(t, err)
-	assert.NotNil(t, config)
+	// 测试Go扩展名
+	goConfig := config["go"]
+	assert.Equal(t, []string{".go"}, goConfig.Extensions)
 
-	// 验证默认配置包含预期语言
-	assert.Contains(t, config, "go")
-	assert.Contains(t, config, "javascript")
-	assert.Contains(t, config, "python")
+	// 测试JavaScript扩展名
+	jsConfig := config["javascript"]
+	assert.Equal(t, []string{".js", ".jsx"}, jsConfig.Extensions)
 
-	// 验证配置文件被创建
-	_, err = os.Stat(configPath)
-	assert.NoError(t, err)
-
-	// 验证配置文件内容
-	content, err := os.ReadFile(configPath)
-	require.NoError(t, err)
-	assert.Contains(t, string(content), "go")
-	assert.Contains(t, string(content), "javascript")
+	// 测试C++扩展名
+	cppConfig := config["cpp"]
+	assert.Equal(t, []string{".cpp", ".hpp", ".cc", ".cxx"}, cppConfig.Extensions)
 }
 
-func TestCreateDefaultLanguagesConfigDirectoryCreation(t *testing.T) {
-	// 测试在深层目录中创建配置文件
-	tmpDir := t.TempDir()
-	deepDir := filepath.Join(tmpDir, "deep", "nested", "directory")
-	configPath := filepath.Join(deepDir, "languages.json")
+func TestGetDefaultLanguagesConfigConsistency(t *testing.T) {
+	// 测试配置的一致性
+	config1 := GetDefaultLanguagesConfig()
+	config2 := GetDefaultLanguagesConfig()
 
-	config, err := createDefaultLanguagesConfig(configPath)
-	require.NoError(t, err)
-	assert.NotNil(t, config)
+	// 验证多次调用返回相同的配置
+	assert.Equal(t, config1, config2)
 
-	// 验证目录被创建
-	_, err = os.Stat(deepDir)
-	assert.NoError(t, err)
-
-	// 验证配置文件被创建
-	_, err = os.Stat(configPath)
-	assert.NoError(t, err)
+	// 验证配置不为空
+	assert.NotEmpty(t, config1)
+	assert.NotEmpty(t, config2)
 }
 
 func TestConfigStruct(t *testing.T) {

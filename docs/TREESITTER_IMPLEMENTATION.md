@@ -344,7 +344,7 @@ RUN apk --no-cache add ca-certificates libc6-compat
 WORKDIR /root/
 
 COPY --from=builder /app/contextgen .
-COPY --from=builder /app/languages.json .
+# 语言配置已内置，无需复制外部配置文件
 
 USER nobody
 
@@ -598,7 +598,7 @@ newTree := parser.Parse(oldTree, newContent)
 ## 10. 常见问题
 
 ### Q: 是否必须使用 Tree-sitter？
-A: 不是。可以继续使用简单解析器（`--treesitter=false`），但 Tree-sitter 提供更高的准确性。
+A: Tree-sitter 解析器已集成完成，提供更高的准确性。项目默认使用 Tree-sitter 解析器进行代码分析。
 
 ### Q: 如何在不同平台上构建？
 A: 需要在目标平台上构建，或使用 Docker 多平台构建。CGO 不支持交叉编译。
@@ -610,7 +610,7 @@ A: Tree-sitter 非常快，通常比正则表达式解析器更快，特别是�
 A: 
 1. 安装对应的 go-tree-sitter 包
 2. 在 `initParsers()` 中注册
-3. 更新 `languages.json` 配置
+3. 更新内置语言配置（在 `internal/config/config.go` 中）
 4. 添加测试用例
 
 ---

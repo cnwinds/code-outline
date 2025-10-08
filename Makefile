@@ -83,31 +83,31 @@ fmt:
 .PHONY: lint
 lint:
 	@echo "🔍 运行代码检查..."
-	golangci-lint run
+	golangci-lint run --config .golangci-simple.yml
 
 # 代码检查（详细输出）
 .PHONY: lint-verbose
 lint-verbose:
 	@echo "🔍 运行代码检查（详细输出）..."
-	golangci-lint run -v
+	golangci-lint run --config .golangci-simple.yml -v
 
 # 代码检查（自动修复）
 .PHONY: lint-fix
 lint-fix:
 	@echo "🔧 运行代码检查并自动修复..."
-	golangci-lint run --fix
+	golangci-lint run --config .golangci-simple.yml --fix
 
 # 代码检查（特定目录）
 .PHONY: lint-internal
 lint-internal:
 	@echo "🔍 检查 internal 目录..."
-	golangci-lint run ./internal/...
+	golangci-lint run --config .golangci-simple.yml ./internal/...
 
 # 代码检查（生成报告）
 .PHONY: lint-report
 lint-report:
 	@echo "📊 生成代码检查报告..."
-	golangci-lint run --out-format=json > lint-report.json
+	golangci-lint run --config .golangci-simple.yml --out-format=json > lint-report.json
 	@echo "✅ 报告已生成: lint-report.json"
 
 # 安装 golangci-lint

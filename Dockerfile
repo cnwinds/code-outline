@@ -35,9 +35,6 @@ WORKDIR /root/
 # 从构建阶段复制二进制文件
 COPY --from=builder /app/contextgen .
 
-# 复制配置文件
-COPY --from=builder /app/languages.json .
-
 # 创建语法目录
 RUN mkdir -p grammars
 

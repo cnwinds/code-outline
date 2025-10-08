@@ -9,7 +9,7 @@
 ## ✨ 特性
 
 - 🚀 **高性能**: 基于 Go 的高效解析引擎，支持并发处理
-- 🌍 **多语言支持**: 通过配置文件支持 9+ 种编程语言
+- 🌍 **多语言支持**: 内置支持 9+ 种编程语言
 - ⚡ **并发处理**: 利用 Goroutines 实现高速文件扫描
 - 🎯 **LLM 优化**: 为 LLM Token 效率极致优化的 JSON 输出格式
 - 🔧 **可配置**: 灵活的排除规则和自定义配置
@@ -49,12 +49,6 @@ make run
 
 # 排除特定目录
 ./build/contextgen generate --exclude "node_modules,vendor,.git"
-
-# 使用自定义配置
-./build/contextgen generate --config my_languages.json
-
-# 禁用 Tree-sitter 解析器（使用简单解析器）
-./build/contextgen generate --treesitter=false
 
 # 增量更新项目上下文
 ./build/contextgen update
@@ -448,7 +442,6 @@ code-outline/
 │   ├── models/              # 数据结构定义
 │   ├── parser/              # 代码解析器
 │   └── scanner/             # 文件扫描器
-├── languages.json           # 语言配置文件
 ├── Makefile                # 构建脚本
 ├── Dockerfile              # Docker 配置
 └── README.md               # 项目文档
@@ -488,36 +481,6 @@ make docker-build
 # 使用 Docker 运行
 make docker-run
 ```
-
-## ⚙️ 配置
-
-### 语言配置文件 (languages.json)
-
-工具通过 `languages.json` 文件配置对不同语言的支持：
-
-```json
-{
-  "go": {
-    "extensions": [".go"],
-    "grammar_path": "./grammars/tree-sitter-go.so",
-    "queries": {
-      "top_level_symbols": [
-        "(function_declaration) @symbol",
-        "(method_declaration) @symbol",
-        "(type_declaration) @symbol"
-      ],
-      "container_body": "(block) @body | (struct_type) @body",
-      "container_methods": "(method_declaration) @method"
-    }
-  }
-}
-```
-
-### 自定义配置
-
-- 修改 `languages.json` 添加新语言支持
-- 调整正则表达式模式以改进符号识别
-- 配置文件扩展名映射
 
 ## 🔄 更新模式
 
@@ -708,8 +671,6 @@ code-outline 生成的上下文文件可以作为：
 ## 🤝 贡献
 
 欢迎贡献代码！请查看 [CONTRIBUTING.md](CONTRIBUTING.md) 了解详细信息。
-
-> **注意**: Tree-sitter 解析器已集成完成，提供更高精度的语法解析。如果遇到 CGO 编译问题，可以使用 `--treesitter=false` 参数回退到简单解析器。
 
 ### 开发流程
 
