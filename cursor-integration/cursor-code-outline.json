@@ -49,7 +49,7 @@
     }
   ],
   "settings": {
-    "contextgen_path": "build/code-outline.exe",
+    "outline_path": "build/code-outline.exe",
     "exclude_patterns": ["node_modules", "vendor", ".git", "build", "dist", "*.test.js", "*.spec.js"],
     "supported_languages": ["go", "javascript", "typescript", "python", "java", "csharp", "rust", "cpp", "c"],
     "output_format": "json",

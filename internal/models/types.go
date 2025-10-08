@@ -19,20 +19,15 @@ type FileInfo struct {
 	FileSize     int64    `json:"fileSize"`     // 文件大小
 }
 
-// Architecture 表示项目架构信息
-type Architecture struct {
-	Overview      string            `json:"overview"`      // 架构概述
-	ModuleSummary map[string]string `json:"moduleSummary"` // 模块摘要
-}
-
 // ProjectContext 表示整个项目的上下文信息
 type ProjectContext struct {
-	ProjectName  string              `json:"projectName"`  // 项目名称
-	ProjectGoal  string              `json:"projectGoal"`  // 项目目标
-	TechStack    []string            `json:"techStack"`    // 技术栈
-	LastUpdated  time.Time           `json:"lastUpdated"`  // 最后更新时间
-	Architecture Architecture        `json:"architecture"` // 架构信息
-	Files        map[string]FileInfo `json:"files"`        // 文件信息映射
+	ProjectName   string              `json:"projectName"`   // 项目名称
+	ProjectRoot   string              `json:"projectRoot"`   // 项目根目录
+	ProjectGoal   string              `json:"projectGoal"`   // 项目目标
+	TechStack     []string            `json:"techStack"`     // 技术栈
+	LastUpdated   time.Time           `json:"lastUpdated"`   // 最后更新时间
+	ModuleSummary map[string]string   `json:"moduleSummary"` // 模块摘要
+	Files         map[string]FileInfo `json:"files"`         // 文件信息映射（相对路径）
 }
 
 // LanguageConfig 表示单个语言的配置

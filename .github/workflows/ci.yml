@@ -116,7 +116,7 @@ jobs:
         choco install mingw -y
 
     - name: Build
-      run: go build -v ./cmd/contextgen
+      run: go build -v ./cmd/code-outline
       env:
         CGO_ENABLED: 1
 
@@ -124,9 +124,9 @@ jobs:
       run: |
         mkdir -p build
         if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-          go build -o build/contextgen-linux-amd64 ./cmd/contextgen
+          go build -o build/code-outline-linux-amd64 ./cmd/code-outline
         elif [ "${{ matrix.os }}" == "windows-latest" ]; then
-          go build -o build/contextgen-windows-amd64.exe ./cmd/contextgen
+          go build -o build/code-outline-windows-amd64.exe ./cmd/code-outline
         fi
       shell: bash
       env:

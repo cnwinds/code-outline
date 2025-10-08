@@ -31,7 +31,7 @@ var (
 
 // rootCmd 根命令
 var rootCmd = &cobra.Command{
-	Use:   "contextgen",
+	Use:   "code-outline",
 	Short: "code-outline - 通用型项目上下文生成器",
 	Long: `code-outline 是一个高性能、跨平台的命令行工具，
 用于通过静态分析为任何复杂的代码仓库生成统一、简洁且信息丰富的 code-outline.json 文件。
@@ -109,6 +109,11 @@ func Execute(version string) error {
 
 // runGenerate 执行生成命令
 func runGenerate(cmd *cobra.Command, args []string) error {
+	// 设置默认输出路径（如果未指定）
+	if outputPath == "" {
+		outputPath = "code-outline.json"
+	}
+
 	fmt.Println("🚀 开始生成项目上下文...")
 
 	// 1. 加载语言配置
@@ -154,21 +159,38 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// 将文件路径转换为相对路径
+	relativeFiles := make(map[string]models.FileInfo)
+	for filePath, fileInfo := range files {
+		relPath, err := filepath.Rel(projectPath, filePath)
+		if err != nil {
+			// 如果无法计算相对路径，使用原始路径
+			relPath = filePath
+		}
+		relativeFiles[relPath] = fileInfo
+	}
+
+	// 获取项目根目录的绝对路径
+	absProjectPath, err := filepath.Abs(projectPath)
+	if err != nil {
+		absProjectPath = projectPath // 如果获取绝对路径失败，使用原始路径
+	}
+
 	context := models.ProjectContext{
-		ProjectName: projectName,
-		ProjectGoal: "TODO: 请在此描述项目目标和主要功能",
-		TechStack:   techStack,
-		LastUpdated: time.Now(),
-		Architecture: models.Architecture{
-			Overview:      "TODO: 请在此描述项目的整体架构",
-			ModuleSummary: generateModuleSummary(files),
-		},
-		Files: files,
+		ProjectName:   projectName,
+		ProjectRoot:   absProjectPath,
+		ProjectGoal:   "TODO: 请在此描述项目目标和主要功能",
+		TechStack:     techStack,
+		LastUpdated:   time.Now(),
+		ModuleSummary: generateModuleSummary(relativeFiles),
+		Files:         relativeFiles,
 	}
 
 	// 6. 生成JSON文件
-	fmt.Printf("💾 生成输出文件: %s\n", outputPath)
-	err = saveProjectContext(&context, outputPath)
+	// 如果输出路径是相对路径，则相对于项目路径
+	resolvedOutputPath := resolveOutputPath(outputPath, projectPath)
+	fmt.Printf("💾 生成输出文件: %s\n", resolvedOutputPath)
+	err = saveProjectContext(&context, resolvedOutputPath)
 	if err != nil {
 		return fmt.Errorf("保存项目上下文失败: %w", err)
 	}
@@ -282,6 +304,11 @@ func filterEmptyPurposeFields(data interface{}) interface{} {
 
 // runUpdate 执行更新命令
 func runUpdate(cmd *cobra.Command, args []string) error {
+	// 设置默认输出路径（如果未指定）
+	if outputPath == "" {
+		outputPath = "code-outline.json"
+	}
+
 	fmt.Println("🔄 开始增量更新项目上下文...")
 
 	// 1. 加载语言配置
@@ -341,11 +368,13 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 	if len(changes) > 0 {
 		fmt.Printf("\n📝 应用了 %d 个文件变更\n", len(changes))
 
-		if err := saveProjectContext(updatedContext, outputPath); err != nil {
+		// 解析输出路径
+		resolvedOutputPath := resolveOutputPath(outputPath, projectPath)
+		if err := saveProjectContext(updatedContext, resolvedOutputPath); err != nil {
 			return fmt.Errorf("保存更新后的上下文失败: %w", err)
 		}
 
-		fmt.Printf("💾 更新文件: %s\n", outputPath)
+		fmt.Printf("💾 更新文件: %s\n", resolvedOutputPath)
 	}
 
 	// 7. 打印统计信息
@@ -360,7 +389,7 @@ func printStatistics(context *models.ProjectContext) {
 	fmt.Printf("  项目名称: %s\n", context.ProjectName)
 	fmt.Printf("  技术栈: %s\n", strings.Join(context.TechStack, ", "))
 	fmt.Printf("  文件数量: %d\n", len(context.Files))
-	fmt.Printf("  模块数量: %d\n", len(context.Architecture.ModuleSummary))
+	fmt.Printf("  模块数量: %d\n", len(context.ModuleSummary))
 
 	// 统计符号数量
 	totalSymbols := 0
@@ -895,4 +924,15 @@ func extractDataFromContext(context *models.ProjectContext, targetFiles, targetD
 	}
 
 	return result, nil
+}
+
+// resolveOutputPath 解析输出路径，如果输出路径是相对路径，则相对于项目路径
+func resolveOutputPath(outputPath, projectPath string) string {
+	// 如果是绝对路径，直接返回
+	if filepath.IsAbs(outputPath) {
+		return outputPath
+	}
+
+	// 如果是相对路径，相对于项目路径
+	return filepath.Join(projectPath, outputPath)
 }

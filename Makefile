@@ -1,8 +1,8 @@
 # code-outline Makefile
 
 # 变量定义
-BINARY_NAME=contextgen
-MAIN_PATH=./cmd/contextgen
+BINARY_NAME=code-outline
+MAIN_PATH=./cmd/code-outline
 BUILD_DIR=./build
 VERSION=v1.0.0
 LDFLAGS=-ldflags "-X main.Version=${VERSION}"

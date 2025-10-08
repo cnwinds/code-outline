@@ -39,40 +39,40 @@ make run
 
 ```bash
 # 生成当前目录的项目上下文
-./build/contextgen generate
+./build/code-outline generate
 
 # 指定项目路径
-./build/contextgen generate --path /path/to/your/project
+./build/code-outline generate --path /path/to/your/project
 
 # 自定义输出文件
-./build/contextgen generate --path . --output my_context.json
+./build/code-outline generate --path . --output my_context.json
 
 # 排除特定目录
-./build/contextgen generate --exclude "node_modules,vendor,.git"
+./build/code-outline generate --exclude "node_modules,vendor,.git"
 
 # 增量更新项目上下文
-./build/contextgen update
+./build/code-outline update
 
 # 更新指定文件
-./build/contextgen update --files "main.go,config.go"
+./build/code-outline update --files "main.go,config.go"
 
 # 更新指定目录
-./build/contextgen update --dirs "internal/,cmd/"
+./build/code-outline update --dirs "internal/,cmd/"
 
 # 同时更新指定文件和目录
-./build/contextgen update --files "main.go" --dirs "internal/"
+./build/code-outline update --files "main.go" --dirs "internal/"
 
 # 查询所有文件和方法定义
-./build/contextgen query
+./build/code-outline query
 
 # 查询指定文件的数据
-./build/contextgen query --files "main.go,config.go"
+./build/code-outline query --files "main.go,config.go"
 
 # 查询指定目录的数据
-./build/contextgen query --dirs "internal/,cmd/"
+./build/code-outline query --dirs "internal/,cmd/"
 
 # 保存查询结果到文件
-./build/contextgen query --files "main.go" --output data.json
+./build/code-outline query --files "main.go" --output data.json
 ```
 
 ## 📋 支持的语言
@@ -96,7 +96,7 @@ make run
 让我们看看 code-outline 如何分析自己的项目：
 
 ```bash
-$ ./contextgen generate
+$ ./code-outline generate
 🚀 开始生成项目上下文...
 📋 加载语言配置...
 ✅ 已加载 9 种语言的配置
@@ -322,120 +322,11 @@ go mod tidy
 3. **在CI环境中运行**：
 golangci-lint在Linux/macOS的CI环境中通常工作正常，建议在CI/CD管道中运行完整的代码质量检查。
 
-**配置 golangci-lint:**
-
-创建 `.golangci.yml` 配置文件：
-
-```yaml
-run:
-  timeout: 5m
-  modules-download-mode: readonly
-
-linters-settings:
-  govet:
-    check-shadowing: true
-  gocyclo:
-    min-complexity: 15
-  maligned:
-    suggest-new: true
-  dupl:
-    threshold: 100
-  goconst:
-    min-len: 2
-    min-occurrences: 2
-  misspell:
-    locale: US
-  lll:
-    line-length: 140
-  funlen:
-    lines: 100
-    statements: 50
-  gocognit:
-    min-complexity: 20
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - experimental
-      - opinionated
-      - performance
-      - style
-    disabled-checks:
-      - dupImport # https://github.com/go-critic/go-critic/issues/845
-      - ifElseChain
-      - octalLiteral
-      - whyNoLint
-      - wrapperFunc
-
-linters:
-  disable-all: true
-  enable:
-    - bodyclose
-    - deadcode
-    - depguard
-    - dogsled
-    - dupl
-    - errcheck
-    - exportloopref
-    - exhaustive
-    - funlen
-    - gochecknoinits
-    - goconst
-    - gocritic
-    - gocyclo
-    - gofmt
-    - goimports
-    - gomnd
-    - goprintffuncname
-    - gosec
-    - gosimple
-    - govet
-    - ineffassign
-    - lll
-    - misspell
-    - nakedret
-    - noctx
-    - nolintlint
-    - rowserrcheck
-    - staticcheck
-    - structcheck
-    - stylecheck
-    - typecheck
-    - unconvert
-    - unparam
-    - unused
-    - varcheck
-    - whitespace
-
-issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - gomnd
-        - funlen
-        - goconst
-        - gocritic
-        - gocyclo
-        - lll
-        - dupl
-        - gosec
-        - gocognit
-    - path: internal/parser/treesitter_parser.go
-      linters:
-        - gocyclo
-        - funlen
-        - gocognit
-    - path: cmd/
-      linters:
-        - gocyclo
-        - funlen
-        - gocognit
-```
-
 ### 项目结构
 
 ```
 code-outline/
-├── cmd/contextgen/          # 主程序入口
+├── cmd/code-outline/          # 主程序入口
 ├── internal/
 │   ├── cmd/                 # CLI 命令实现
 │   ├── config/              # 配置管理
@@ -490,46 +381,46 @@ code-outline 支持增量更新模式，可以只更新指定的文件或目录�
 
 ```bash
 # 检测所有文件变更并更新
-./build/contextgen update
+./build/code-outline update
 
 # 指定项目路径和输出文件
-./build/contextgen update --path /path/to/project --output my_context.json
+./build/code-outline update --path /path/to/project --output my_context.json
 ```
 
 ### 指定文件更新
 
 ```bash
 # 更新单个文件
-./build/contextgen update --files "main.go"
+./build/code-outline update --files "main.go"
 
 # 更新多个文件
-./build/contextgen update --files "main.go,config.go,utils.go"
+./build/code-outline update --files "main.go,config.go,utils.go"
 
 # 更新指定路径的文件
-./build/contextgen update --files "cmd/main.go,internal/config/config.go"
+./build/code-outline update --files "cmd/main.go,internal/config/config.go"
 ```
 
 ### 指定目录更新
 
 ```bash
 # 更新单个目录
-./build/contextgen update --dirs "internal/"
+./build/code-outline update --dirs "internal/"
 
 # 更新多个目录
-./build/contextgen update --dirs "internal/,cmd/,pkg/"
+./build/code-outline update --dirs "internal/,cmd/,pkg/"
 
 # 更新子目录
-./build/contextgen update --dirs "internal/parser/,internal/scanner/"
+./build/code-outline update --dirs "internal/parser/,internal/scanner/"
 ```
 
 ### 混合更新模式
 
 ```bash
 # 同时更新指定文件和目录
-./build/contextgen update --files "main.go" --dirs "internal/"
+./build/code-outline update --files "main.go" --dirs "internal/"
 
 # 结合排除规则
-./build/contextgen update --files "main.go" --exclude "*.test.go"
+./build/code-outline update --files "main.go" --exclude "*.test.go"
 ```
 
 ### 更新模式的优势
@@ -547,52 +438,52 @@ code-outline 支持查询模式，可以查询指定文件或目录中的所有�
 
 ```bash
 # 查询所有文件和方法定义
-./build/contextgen query
+./build/code-outline query
 
 # 指定项目路径
-./build/contextgen query --path /path/to/project
+./build/code-outline query --path /path/to/project
 
 # 输出到文件
-./build/contextgen query --output data.json
+./build/code-outline query --output data.json
 ```
 
 ### 指定文件查询
 
 ```bash
 # 查询单个文件的数据
-./build/contextgen query --files "main.go"
+./build/code-outline query --files "main.go"
 
 # 查询多个文件的数据
-./build/contextgen query --files "main.go,config.go,utils.go"
+./build/code-outline query --files "main.go,config.go,utils.go"
 
 # 查询指定路径的文件数据
-./build/contextgen query --files "cmd/main.go,internal/config/config.go"
+./build/code-outline query --files "cmd/main.go,internal/config/config.go"
 ```
 
 ### 指定目录查询
 
 ```bash
 # 查询单个目录的数据
-./build/contextgen query --dirs "internal/"
+./build/code-outline query --dirs "internal/"
 
 # 查询多个目录的数据
-./build/contextgen query --dirs "internal/,cmd/,pkg/"
+./build/code-outline query --dirs "internal/,cmd/,pkg/"
 
 # 查询子目录的数据
-./build/contextgen query --dirs "internal/parser/,internal/scanner/"
+./build/code-outline query --dirs "internal/parser/,internal/scanner/"
 ```
 
 ### 混合查询模式
 
 ```bash
 # 同时查询指定文件和目录的数据
-./build/contextgen query --files "main.go" --dirs "internal/"
+./build/code-outline query --files "main.go" --dirs "internal/"
 
 # 结合排除规则
-./build/contextgen query --files "main.go" --exclude "*.test.go"
+./build/code-outline query --files "main.go" --exclude "*.test.go"
 
 # 输出到标准输出（不指定output参数）
-./build/contextgen query --files "main.go"
+./build/code-outline query --files "main.go"
 ```
 
 ### 查询模式的优势
@@ -638,7 +529,7 @@ code-outline 支持查询模式，可以查询指定文件或目录中的所有�
 
 ```bash
 # 生成项目上下文
-./contextgen generate --path ./my-project
+./code-outline generate --path ./my-project
 
 # 将 code-outline.json 提供给 LLM
 # LLM 现在可以理解整个项目结构和代码架构
@@ -710,7 +601,7 @@ $env:CGO_ENABLED=1
 $env:CC="gcc"
 
 # 然后重新构建
-go build -o build/code-outline.exe ./cmd/contextgen
+go build -o build/code-outline.exe ./cmd/code-outline
 ```
 
 **Q: 扫描大项目时内存占用过高？**

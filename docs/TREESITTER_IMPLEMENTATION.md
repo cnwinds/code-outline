@@ -334,7 +334,7 @@ RUN go mod download
 COPY . .
 
 # 启用 CGO 构建
-RUN CGO_ENABLED=1 GOOS=linux go build -a -o contextgen ./cmd/contextgen
+RUN CGO_ENABLED=1 GOOS=linux go build -a -o code-outline ./cmd/code-outline
 
 # 运行时镜像
 FROM alpine:latest
@@ -343,12 +343,12 @@ RUN apk --no-cache add ca-certificates libc6-compat
 
 WORKDIR /root/
 
-COPY --from=builder /app/contextgen .
+COPY --from=builder /app/code-outline .
 # 语言配置已内置，无需复制外部配置文件
 
 USER nobody
 
-ENTRYPOINT ["./contextgen"]
+ENTRYPOINT ["./code-outline"]
 CMD ["--help"]
 ```
 
@@ -437,7 +437,7 @@ go test ./internal/parser -bench=.
 make build
 
 # 测试单个文件
-./build/contextgen generate --path ./testdata/example.go --output test_output.json
+./build/code-outline generate --path ./testdata/example.go --output test_output.json
 
 # 对比结果
 diff test_output.json expected_output.json
@@ -483,7 +483,7 @@ undefined reference to `ts_parser_new'
 ```bash
 # 清理并重新构建
 go clean -cache
-CGO_ENABLED=1 go build -v ./cmd/contextgen
+CGO_ENABLED=1 go build -v ./cmd/code-outline
 ```
 
 ### 问题 4: 跨平台编译失败

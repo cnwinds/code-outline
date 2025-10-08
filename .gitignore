@@ -1,7 +1,7 @@
 # 二进制文件
 /build/
-contextgen
-contextgen.exe
+code-outline
+code-outline.exe
 
 # Go 构建输出
 *.exe

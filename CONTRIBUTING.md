@@ -190,7 +190,7 @@ make bench
 
 ```
 code-outline/
-├── cmd/contextgen/          # 主程序入口
+├── cmd/code-outline/          # 主程序入口
 ├── internal/                # 内部包
 │   ├── cmd/                # CLI 命令
 │   ├── config/             # 配置管理

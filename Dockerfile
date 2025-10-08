@@ -17,7 +17,7 @@ RUN go mod download
 COPY . .
 
 # 构建应用（启用 CGO）
-RUN CGO_ENABLED=1 GOOS=linux go build -a -o contextgen ./cmd/contextgen
+RUN CGO_ENABLED=1 GOOS=linux go build -a -o code-outline ./cmd/code-outline
 
 # 使用精简的alpine镜像作为运行环境
 FROM alpine:latest
@@ -33,7 +33,7 @@ RUN addgroup -g 1000 appgroup && \
 WORKDIR /root/
 
 # 从构建阶段复制二进制文件
-COPY --from=builder /app/contextgen .
+COPY --from=builder /app/code-outline .
 
 # 创建语法目录
 RUN mkdir -p grammars
@@ -48,7 +48,7 @@ USER appuser
 # EXPOSE 8080
 
 # 设置入口点
-ENTRYPOINT ["./contextgen"]
+ENTRYPOINT ["./code-outline"]
 
 # 默认命令
 CMD ["--help"]

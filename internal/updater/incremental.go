@@ -395,7 +395,7 @@ func (u *IncrementalUpdater) applyChanges(context *models.ProjectContext, change
 	updatedContext.Files = updatedFiles
 
 	// 重新生成模块摘要
-	updatedContext.Architecture.ModuleSummary = u.generateModuleSummary(updatedFiles)
+	updatedContext.ModuleSummary = u.generateModuleSummary(updatedFiles)
 
 	return &updatedContext
 }

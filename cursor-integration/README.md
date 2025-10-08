@@ -1,34 +1,39 @@
-# code-outline 声明管理工具
+# code-outline Cursor 集成工具
 
-基于 code-outline 的快速项目声明和结构了解工具，专为 Cursor 编辑器集成设计。
+基于 code-outline 的智能项目上下文生成工具，专为 Cursor 编辑器集成设计。通过 Tree-sitter 解析器提供高精度的代码结构分析，为 LLM 提供完整的项目理解能力。
 
 ## 🎯 核心功能
 
-### 1. 获取所有文件声明
-- 获取项目中所有文件的声明内容
-- 支持缓存机制，提高性能
-- 生成完整的项目声明摘要
+### 1. 生成项目上下文
+- 首次使用或需要完整项目上下文时使用
+- 生成整个项目的结构、文件和方法定义
+- 创建 `code-outline.json` 文件
+- 适用于：新项目分析、完整重构、架构理解
 
-### 2. 获取指定文件声明
-- 获取单个文件的详细声明信息
-- 支持相对路径和绝对路径
-- 智能缓存管理
+### 2. 更新项目上下文
+- 当文件发生变化后使用
+- 增量更新 `code-outline.json`，只重新解析已修改的文件
+- 适用于：文件修改后的上下文更新、保持项目状态同步
 
-### 3. 创建项目声明文件
-- 生成完整的项目声明文档
-- 包含文件索引和分类
-- 支持多种输出格式
+### 3. 查询特定文件
+- 需要了解特定文件结构时使用
+- 查询指定文件的方法、类、函数定义
+- 支持多文件查询，一次返回多个文件内容
+- 适用于：代码审查、特定模块分析、函数调用关系理解
 
-### 4. 更新文件声明
-- 增量更新指定文件的声明
-- 检测文件变化
-- 维护声明一致性
+### 4. 查询目录结构
+- 需要了解特定目录结构时使用
+- 查询指定目录下所有文件的方法和类定义
+- 适用于：模块分析、目录结构理解、相关文件批量分析
 
 ## 🚀 快速开始
 
 ### 安装工具
 
 ```bash
+# 进入工具目录
+cd cursor-integration
+
 # 安装到 Cursor
 python install-code-outline.py install
 
@@ -39,126 +44,87 @@ python install-code-outline.py check
 python install-code-outline.py uninstall
 ```
 
-### 基本使用
+### 重启 Cursor
 
-#### 1. 获取所有文件声明
+安装完成后，重启 Cursor 编辑器以加载新工具。
+
+### 使用工具
+
+#### 方法一：使用 Tasks（推荐）
+
+1. 打开您的项目
+2. 按 `Ctrl+Shift+P` (Windows/Linux) 或 `Cmd+Shift+P` (macOS)
+3. 输入 "Tasks: Run Task" 或直接输入任务名称：
+   - **生成项目上下文** - 分析整个项目
+   - **更新项目上下文** - 更新已修改的文件
+   - **查询特定文件** - 分析单个文件
+   - **查询目录结构** - 分析目录结构
+
+#### 方法二：使用快捷键
+
+- `Ctrl+Shift+G` - 生成项目上下文
+- `Ctrl+Shift+U` - 更新项目上下文
+- `Ctrl+Shift+Q` - 查询特定文件
+- `Ctrl+Shift+D` - 查询目录结构
+
+#### 方法三：命令行使用
 
 ```bash
-# 在 Cursor 中使用
-# 按 Ctrl+Shift+P，选择 "获取所有文件声明"
+# 生成项目上下文
+./build/code-outline.exe generate --path .
+
+# 更新项目上下文
+./build/code-outline.exe update --path .
+
+# 查询特定文件
+./build/code-outline.exe query --files "main.go,config.go" --path . --ouput query_result.json
+
+# 查询目录结构
+./build/code-outline.exe query --dirs "src/,internal/" --path . --ouput directory_query_result.json
 ```
 
-#### 2. 获取指定文件声明
+## 📊 输出文件说明
 
-```bash
-# 在 Cursor 中使用
-# 右键文件，选择 "获取文件声明"
-```
+工具会生成以下文件：
 
-#### 3. 创建项目声明文件
+- `code-outline.json` - 完整的项目上下文文件
+- `query_result.json` - 特定文件查询结果
+- `directory_query_result.json` - 目录结构查询结果
 
-```bash
-# 在 Cursor 中使用
-# 按 Ctrl+Shift+P，选择 "创建项目声明"
-```
+## 🎯 使用场景
 
-#### 4. 更新文件声明
+### 1. 新项目分析
+在 Cursor 中按 `Ctrl+Shift+P`，输入 "Tasks: Run Task"，选择 "生成项目上下文"
 
-```bash
-# 在 Cursor 中使用
-# 右键文件，选择 "更新文件声明"
-```
+### 2. 代码审查
+在 Cursor 中按 `Ctrl+Shift+P`，输入 "Tasks: Run Task"，选择 "查询特定文件"
 
-## 📊 输出格式
+### 3. 项目文档生成
+在 Cursor 中按 `Ctrl+Shift+P`，输入 "Tasks: Run Task"，选择 "生成项目上下文"
 
-### 所有文件声明输出
-
-```json
-{
-  "timestamp": "2025-01-07 15:30:00",
-  "project_path": "/path/to/project",
-  "total_files": 25,
-  "declarations": {
-    "files": {
-      "src/main.go": {
-        "purpose": "主程序入口",
-        "symbols": [
-          {
-            "prototype": "func main()",
-            "purpose": "程序入口点",
-            "range": [10, 15]
-          }
-        ]
-      }
-    }
-  },
-  "summary": {
-    "total_files": 25,
-    "total_symbols": 150,
-    "languages": ["Go", "JavaScript"],
-    "file_types": {
-      ".go": 15,
-      ".js": 10
-    }
-  }
-}
-```
-
-### 文件声明输出
-
-```json
-{
-  "timestamp": "2025-01-07 15:30:00",
-  "file_path": "/path/to/project/src/main.go",
-  "file_name": "main.go",
-  "declarations": {
-    "files": {
-      "src/main.go": {
-        "purpose": "主程序入口",
-        "symbols": [...]
-      }
-    }
-  },
-  "summary": {
-    "file_name": "main.go",
-    "total_symbols": 5,
-    "symbol_types": {
-      "functions": 3,
-      "variables": 2
-    }
-  }
-}
-```
+### 4. 增量更新
+在 Cursor 中按 `Ctrl+Shift+P`，输入 "Tasks: Run Task"，选择 "更新项目上下文"
 
 ## ⚙️ 配置选项
 
 ### 命令行参数
 
 ```bash
-python declaration-manager.py [action] [options]
+./build/code-outline.exe [command] [options]
 
-Actions:
-  get-all          获取所有文件声明
-  get-file         获取指定文件声明
-  create-project   创建项目声明文件
-  update-file      更新文件声明
+Commands:
+  generate          生成项目上下文
+  update            更新项目上下文
+  query             查询文件或目录
+  version           显示版本信息
 
 Options:
-  --path PATH      项目路径 (默认: 当前目录)
-  --file FILE      指定文件路径
-  --output FILE    输出文件
-  --no-cache       不使用缓存
-  --verbose        详细输出
+  --path PATH       项目路径 (默认: 当前目录)
+  --output FILE     输出文件路径
+  --exclude PATTERN 排除目录或文件模式
+  --files FILES     指定要查询的文件（逗号分隔）
+  --dirs DIRS       指定要查询的目录（逗号分隔）
 ```
-
-### 缓存配置
-
-工具支持智能缓存机制：
-
-- **缓存位置**: `.declaration_cache/` 目录
-- **缓存有效期**: 24小时
-- **缓存策略**: 基于文件修改时间
-- **清理机制**: 自动清理过期缓存
 
 ### 支持的语言
 
@@ -173,45 +139,31 @@ Options:
 
 ## 🔧 高级功能
 
-### 1. 智能缓存
+### 1. 智能解析
+
+- 基于 Tree-sitter 的高精度语法解析
+- 支持复杂嵌套结构
+- 自动识别函数、类、方法定义
+- 提取注释和文档字符串
+
+### 2. 增量更新
 
 ```bash
-# 使用缓存（默认）
-python declaration-manager.py get-all
+# 更新指定文件
+./build/code-outline.exe update --files "main.go,config.go"
 
-# 强制刷新缓存
-python declaration-manager.py get-all --no-cache
+# 更新指定目录
+./build/code-outline.exe update --dirs "src/,internal/"
 ```
 
-### 2. 批量操作
+### 3. 排除模式
 
 ```bash
-# 创建项目声明文件
-python declaration-manager.py create-project --output my_project.json
-
-# 更新多个文件
-for file in src/*.go; do
-    python declaration-manager.py update-file --file "$file"
-done
-```
-
-### 3. 集成到 CI/CD
-
-```yaml
-# GitHub Actions 示例
-- name: Generate Project Declarations
-  run: |
-    python declaration-manager.py create-project
-    # 上传到存储或发送到 API
+# 排除特定目录
+./build/code-outline.exe generate --exclude "node_modules,vendor,.git"
 ```
 
 ## 📈 性能优化
-
-### 缓存策略
-
-- 文件级缓存：基于文件修改时间
-- 项目级缓存：基于项目结构变化
-- 智能失效：自动检测文件变化
 
 ### 性能指标
 
@@ -219,42 +171,47 @@ done
 - 中等项目（100-1000文件）：< 30秒
 - 大项目（>1000文件）：< 2分钟
 
+### 优化策略
+
+- 并发文件处理
+- 智能缓存机制
+- 增量更新支持
+- 内存优化
+
 ## 🐛 故障排除
 
 ### 常见问题
 
-**Q: 找不到 contextgen 可执行文件**
+**Q: 找不到 code-outline 可执行文件**
 ```bash
-# 检查 contextgen 是否在 PATH 中
-where contextgen  # Windows
-which contextgen  # Linux/macOS
-
-# 或指定完整路径
-export CONTEXTGEN_PATH="/path/to/contextgen"
-```
-
-**Q: 缓存文件损坏**
-```bash
-# 清理缓存
-rm -rf .declaration_cache/
-python declaration-manager.py get-all --no-cache
+# 确保 code-outline 已构建
+cd ../../  # 回到项目根目录
+make build
 ```
 
 **Q: 权限问题**
 ```bash
-# 确保有写入权限
-chmod +x declaration-manager.py
+# 给脚本执行权限
 chmod +x install-code-outline.py
 ```
 
-### 调试模式
-
+**Q: Cursor 中找不到工具**
 ```bash
-# 启用详细输出
-python declaration-manager.py get-all --verbose
+# 重新安装
+python install-code-outline.py uninstall
+python install-code-outline.py install
+# 然后重启 Cursor
+```
 
-# 检查安装状态
-python install-code-outline.py check
+**Q: Tree-sitter 解析器初始化失败**
+```bash
+# 检查 CGO 是否启用
+go env CGO_ENABLED
+
+# 如果为 false，启用 CGO
+export CGO_ENABLED=1  # Linux/macOS
+set CGO_ENABLED=1     # Windows CMD
+$env:CGO_ENABLED=1    # Windows PowerShell
 ```
 
 ## 🤝 贡献
@@ -266,13 +223,13 @@ python install-code-outline.py check
 ```bash
 # 克隆项目
 git clone <repository-url>
-cd code-outline/cursor-integration/spec-driven-tools
+cd code-outline
 
-# 安装依赖
-pip install -r requirements.txt
+# 构建项目
+make build
 
 # 运行测试
-python -m pytest tests/
+make test
 ```
 
 ## 📄 许可证
@@ -281,5 +238,4 @@ MIT License - 详见 LICENSE 文件
 
 ---
 
-**code-outline 声明管理工具** - 让您快速了解项目结构！ 🗺️✨
-
+**code-outline Cursor 集成工具** - 让您快速了解项目结构！ 🗺️✨
